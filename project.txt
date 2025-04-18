@@ -1,0 +1,57 @@
+#include <iostream>
+using namespace std;
+class user {
+private:
+	string name;
+	int age;
+	string city;
+	int cnic;
+public:
+	void setname(string n) {
+		cout << "enter your name :" << endl;
+		cin >> n;
+		name = n;
+	}
+	void setage(int a) {
+		cout << "enter your age :" << endl;
+		cin >> a;
+		age = a;
+	}
+	void setcity(string c) {
+		cout << "enter city name :" << endl;
+		cin >> c;
+		city = c;
+	}
+	void setcnic(int cn) {
+		cout << "enter your cnic :" << endl;
+		cin >> cn;
+		cnic = cn;
+	}
+	string getname() const {
+		return name;
+	}
+	int getage() {
+		return age;
+	}
+	string getcity() {
+		return city;
+	}
+	int getcnic() {
+		return cnic;
+	}
+
+};
+class candidate :public user {
+private:
+	string electsymbol;
+	int specialno;
+public:
+	candidate(string n, int a, string c, int cn, string es, int sn) :user ( n, a, c, cn), specialno(sn), electsymbol(es) {};
+	int getspecialno() {
+		return specialno;
+	}
+	string getelectsymbol() {
+		return electsymbol;
+	}
+	
+};
