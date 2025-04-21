@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+
 using namespace std;
 class user 
 {
@@ -7,6 +9,7 @@ private:
     int age;
     string city;
     int cnic;
+    string role;//humain bataye ga kay user admin hai candidate hai ya voter hai
 public:
     user()
     {
@@ -14,13 +17,15 @@ public:
         age=0;
         city="";
         cnic=0;
+        role="";
     }
-    user(string n,int a,string c,int cn)
+    user(string n,int a,string c,int cn,string r)
     {
         name=n;
         age=a;
         city=c;
         cnic=cn;
+        role=r;
     }
     void setname(string n) 
     {
@@ -43,21 +48,81 @@ public:
         cin >> cn;
         cnic = cn;
     }
-    string getname() const {
+    void setrole(string r) 
+    {
+        cout << "enter your role :" << endl;
+        cin >> r;
+        role=r;
+    }
+    string getname() const 
+    {
         return name;
     }
-    int getage() {
+    int getage() 
+    {
         return age;
     }
-    string getcity() {
+    string getcity() 
+    {
         return city;
     }
-    int getcnic() {
+    int getcnic() 
+    {
         return cnic;
     }
-    void displayuserinfo() {
-        
-}
+    string getrole()
+    {
+        return role;
+    }
+    void displayuserinfo()
+    {
+        cout<<"Name: "<<name<<endl;
+        cout<<"Age: "<<age<<endl;
+        cout<<"CNIC: "<<cnic<<endl;
+        cout<<"City: "<<city<<endl;
+        cout<<"Role: "<<role<<endl;
+    }
+    virtual void showrole() //ye function override ho ga sari classes main hain
+    {
+        cout<<"Role: "<<role<<endl;
+    }
+    void saveToFile() 
+    {
+        ofstream file("user.txt", ios::app);
+        if (file.is_open()) 
+        {
+            file << name << endl;
+            file << age << endl;
+            file << cnic << endl;
+            file << city << endl;
+            file << role << endl;
+            file.close();
+            cout << "User data saved to file successfully."<<endl;
+        } 
+        else 
+        {
+            cout << "Error opening file for writing."<<endl;
+        }
+    }
+    void readAllUsers() 
+    {
+        ifstream file("user.txt");
+        string line;
+        if (file.is_open()) 
+        {
+            cout << "\nAll Users from File:"<<endl;
+            while (getline(file, line)) 
+            {
+                cout << line << endl;
+            }
+            file.close();
+        } 
+        else 
+        {
+            cout << "Error opening file for reading."<<endl;
+        }
+    }
+    ~user(){}
 };
 
 class candidate :public user 
@@ -66,7 +131,7 @@ private:
     string electsymbol;
     int specialno;
 public:
-    candidate(string n, int a, string c, int cn, string es, int sn) :user(n, a, c, cn), specialno(sn), electsymbol(es) {};
+    candidate(string n, int a, string c, int cn, string r, string es, int sn) :user(n, a, c, cn,r), specialno(sn), electsymbol(es) {};
     int getspecialno() 
     {
         return specialno;
@@ -85,7 +150,7 @@ private:
 public:
     voter() : user(), voterID(""), hasvoted(false) {}
 
-    voter(string n, int a, string c, int cn, string vid): user(n, a, c, cn), voterID(vid), hasvoted(false) {}
+    voter(string n, int a, string c, int cn, string r, string vid): user(n, a, c, cn, r), voterID(vid), hasvoted(false) {}
 
     void sethasvoted(bool voted) 
     {
