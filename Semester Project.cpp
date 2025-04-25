@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include<string>
 
 using namespace std;
 
@@ -11,7 +12,8 @@ void interface_logo()
 }
 
 void login_page()
-{
+{   
+    
     int n;
     string entered_cnic, entered_pw;
     interface_logo();
@@ -23,7 +25,7 @@ void login_page()
     cin >> n;
     cin.ignore();
     cout << "Enter Password: ";
-    getline(cin, entered_pw);
+    getline(cin, entered_pw); 
     ifstream file("user.txt");
     string name, age, cnic, city, role, password, line;
     bool found = false;
