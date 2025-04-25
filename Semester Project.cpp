@@ -278,5 +278,7 @@ public:
 
 int main()
 {
-    interface_logo();
+login_page();
+
+return 0;
 }
