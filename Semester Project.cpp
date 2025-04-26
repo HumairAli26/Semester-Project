@@ -1,147 +1,58 @@
 #include <iostream>
 #include <fstream>
-#include <string>
 
 using namespace std;
-
-void interface_logo()
-{
-    cout << "=====================================================================" << endl;
-    cout << "#                   E - V O T I N G   S Y S T E M                   #" << endl;
-    cout << "=====================================================================" << endl;
-}
-
-void login_page()
-{
-    int n;
-    string entered_cnic, entered_pw;
-    interface_logo();
-    cout << "Enter Your CNIC: ";
-    cin.ignore();
-    getline(cin, entered_cnic);
-    cout << "Select your Role: " << endl;
-    cout << " 1. Voter \n 2. Candidate \n 3. Admin \n 0. Exit" << endl;
-    cin >> n;
-    cin.ignore();
-    cout << "Enter Password: ";
-    getline(cin, entered_pw);
-    ifstream file("user.txt");
-    string name, age, cnic, city, role, password, line;
-    bool found = false;
-    if (file.is_open())
-    {
-        while (getline(file, name))
-        {
-            getline(file, age);
-            getline(file, cnic);
-            getline(file, city);
-            getline(file, role);
-            getline(file, password);
-            getline(file, line);
-            if (cnic == entered_cnic && password == entered_pw)
-            {
-                found = true;
-                if ((n == 1 && role == "Voter") ||
-                    (n == 2 && role == "Candidate") ||
-                    (n == 3 && role == "Admin"))
-                {
-                    cout << "Login successful! Welcome " << role << " " << name << "!" << endl;
-                    if ((n == 1 && role == "Voter"))
-                    {
-                        //Voter Side function will be added When you make it
-                    }
-                    else if ((n == 2 && role == "Candidate"))
-                    {
-                        //Candidate Side function will be added When you make it
-                    }
-                    else if ((n == 3 && role == "Admin"))
-                    {
-                        //Admin Side function will be added When you make it
-                    }
-                }
-                else
-                {
-                    cout << "Role mismatch. Access denied." << endl;
-                }
-                break;
-            }
-        }
-        file.close();
-    }
-    else
-    {
-        cout << "Error opening user file." << endl;
-    }
-    if (!found)
-    {
-        cout << "CNIC or password incorrect." << endl;
-    }
-}
-
-
 class user 
 {
 private:
     string name;
     int age;
     string city;
-    string cnic;
+    int cnic;
     string role;//humain bataye ga kay user admin hai candidate hai ya voter hai
-    string password;
 public:
     user()
     {
         name="";
         age=0;
         city="";
-        cnic="";
+        cnic=0;
         role="";
-        password="";
     }
-    user(string n,int a,string c,string cn,string r,string p)
+    user(string n,int a,string c,int cn,string r)
     {
         name=n;
         age=a;
         city=c;
         cnic=cn;
         role=r;
-        password=p;
     }
     void setname(string n) 
     {
-        cout << "Enter your name :" << endl;
+        cout << "enter your name :" << endl;
         cin >> n;
         name = n;
     }
-    void setage(int a) 
-    {
-        cout << "Enter your age :" << endl;
+    void setage(int a) {
+        cout << "enter your age :" << endl;
         cin >> a;
         age = a;
     }
-    void setcity(string c) 
-    {
-        cout << "Enter city name :" << endl;
+    void setcity(string c) {
+        cout << "enter city name :" << endl;
         cin >> c;
         city = c;
     }
-    void setcnic(string cn) 
-    {
-        cout << "Enter your cnic :" << endl;
+    void setcnic(int cn) {
+        cout << "enter your cnic :" << endl;
         cin >> cn;
         cnic = cn;
     }
     void setrole(string r) 
     {
-        cout << "Enter your role :" << endl;
+        cout << "enter your role :" << endl;
         cin >> r;
         role=r;
-    }
-    void setpassword(string p)
-    {
-        cout<<"Set your Password: "<<endl;
-        cin>>p;
-        password=p;
     }
     string getname() const 
     {
@@ -155,17 +66,13 @@ public:
     {
         return city;
     }
-    string getcnic() 
+    int getcnic() 
     {
         return cnic;
     }
     string getrole()
     {
         return role;
-    }
-    string getpassword()
-    {
-        return password;
     }
     void displayuserinfo()
     {
@@ -175,7 +82,10 @@ public:
         cout<<"City: "<<city<<endl;
         cout<<"Role: "<<role<<endl;
     }
-    virtual void showrole()=0;
+    virtual void showrole() //ye function override ho ga sari classes main hain
+    {
+        cout<<"Role: "<<role<<endl;
+    }
     void saveToFile() 
     {
         ofstream file("user.txt", ios::app);
@@ -186,7 +96,6 @@ public:
             file << cnic << endl;
             file << city << endl;
             file << role << endl;
-            file <<"----------"<<endl;
             file.close();
             cout << "User data saved to file successfully."<<endl;
         } 
@@ -216,13 +125,13 @@ public:
     ~user(){}
 };
 
-class candidate : public user 
+class candidate :public user 
 {
 private:
     string electsymbol;
     int specialno;
 public:
-    candidate(string n, int a, string c, string cn, string r, string p, string es, int sn) :user(n, a, c, cn,r,p), specialno(sn), electsymbol(es) {};
+    candidate(string n, int a, string c, int cn, string r, string es, int sn) :user(n, a, c, cn,r), specialno(sn), electsymbol(es) {};
     int getspecialno() 
     {
         return specialno;
@@ -241,7 +150,7 @@ private:
 public:
     voter() : user(), voterID(""), hasvoted(false) {}
 
-    voter(string n, int a, string c, string cn, string r, string p, string vid): user(n, a, c, cn, r, p), voterID(vid), hasvoted(false) {}
+    voter(string n, int a, string c, int cn, string r, string vid): user(n, a, c, cn, r), voterID(vid), hasvoted(false) {}
 
     void sethasvoted(bool voted) 
     {
@@ -275,10 +184,3 @@ public:
         cout << "Has Voted: " << (hasvoted ? "Yes" : "No") << endl;
     }
 };
-
-int main()
-{
-login_page();
-
-return 0;
-}
