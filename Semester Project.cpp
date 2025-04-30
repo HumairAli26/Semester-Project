@@ -432,6 +432,71 @@ public:
         }
     }
 
+    void removeCandidate() 
+    {
+        string targetCandidateID;
+        cout << "Enter the Candidate ID to remove: ";
+        cin.ignore();
+        getline(cin, targetCandidateID);
+    
+        ifstream fin("candidate.txt");
+        ofstream fout("temp.txt");
+    
+        if (!fin || !fout) 
+        {
+            cout << Red << "Error opening file." << Reset << endl;
+            return;
+        }
+    
+        string name, age, cnic, city, role, password, CandidateID, party, symbol, area, votes, eligible, sep;
+        bool found = false;
+    
+        while (getline(fin, name)) 
+        {
+            getline(fin, age);
+            getline(fin, cnic);
+            getline(fin, city);
+            getline(fin, role);
+            getline(fin, password);
+            getline(fin, party);
+            getline(fin, symbol);
+            getline(fin, area);
+            getline(fin, votes);
+            getline(fin, eligible);
+            getline(fin, sep);
+
+            if (CandidateID != targetCandidateID) 
+            {
+                fout << name << endl;
+                fout << age << endl;
+                fout << cnic << endl;
+                fout << city << endl;
+                fout << role << endl;
+                fout << password << endl;
+                fout << party << endl;
+                fout << symbol << endl;
+                fout << area << endl;
+                fout << votes << endl;
+                fout << eligible << endl;
+                fout << "----------" << endl;
+            }
+            else 
+            {
+                found = true;
+                cout << Yellow << "Candidate with ID " << targetCandidateID << " removed successfully." << Reset << endl;
+            }
+        }
+    
+        fin.close();
+        fout.close();
+        remove("candidate.txt");
+        rename("temp.txt", "candidate.txt");
+        if (!found) 
+        {
+            cout << Red << "No candidate found with ID: " << targetCandidateID << Reset << endl;
+        }
+    }    
+
     void saveToFile()
     {
         ofstream file("candidates.txt", ios::app);
@@ -626,6 +691,80 @@ class voter : public user {
                 cout << "Error saving voter to file.\n";
             }
         }
+
+        void deleteVoter() 
+        {
+            string targetVoterID;
+            cout << "Enter the Voter ID to remove: ";
+            cin.ignore();
+            getline(cin, targetVoterID);
+        
+            ifstream fin("voters.txt");
+            ofstream fout("temp.txt");
+        
+            if (!fin || !fout) 
+            {
+                cout << Red << "Error opening file." << Reset << endl;
+                return;
+            }
+        
+            string name, age, cnic, city, role, password, voterID, area, hasvoted, sep;
+            bool found = false;
+        
+            while (getline(fin, name)) 
+            {
+                getline(fin, age);
+                getline(fin, cnic);
+                getline(fin, city);
+                getline(fin, role);
+                getline(fin, password);
+                getline(fin, voterID);
+                getline(fin, area);
+                getline(fin, hasvoted);
+                getline(fin, sep);  // ----------
+        
+                if (voterID == targetVoterID)
+                {
+                    found = true;
+                    cout << Yellow << "Voter with ID " << voterID << " removed successfully." << Reset << endl;
+                    continue;
+                }
+        
+                fout << name << endl;
+                fout << age << endl;
+                fout << cnic << endl;
+                fout << city << endl;
+                fout << role << endl;
+                fout << password << endl;
+                fout << voterID << endl;
+                fout << area << endl;
+                fout << hasvoted << endl;
+                fout << "----------" << endl;
+            }
+        
+            fin.close();
+            fout.close();
+            remove("voters.txt");
+            rename("temp.txt", "voters.txt");
+            if (!found) 
+            {
+                cout << Red << "No voter found with ID: " << targetVoterID << Reset << endl;
+            }
+        }  
+        
+        void deleteAllVoters() 
+        {
+            ofstream file("voters.txt", ios::trunc);
+            if (file.is_open()) 
+            {
+                file.close();
+                cout << Yellow << "All voter records have been deleted successfully." << Reset << endl;
+            } 
+            else 
+            {
+                cout << Red << "Error: Unable to open voters.txt for deletion." << Reset << endl;
+            }
+        }        
     
         // Area match check
         bool matchArea(const string& voterArea) {
@@ -636,9 +775,9 @@ class voter : public user {
         void showrole() override {
             cout << "Role: Voter\n";
         }
-    };
+};
 
-class admin :public voter,public Result
+class admin :public voter,public Result,public Graph
 {
     //Election *elections[MAX_ELECTION];
     int electionCount;
@@ -700,15 +839,13 @@ public:
                 reset();
                 break;
             case 10:
-                deleteAllVotes();
+                deleteAllVoters();
                 break;
             case 0:
-                cout << Green << "Logging out....\n"
-                     << Reset;
+                cout << Green << "Logging out....\n" << Reset;
                 return;
             default:
-                cout << Red << "Invalid choice, Please try again\n"
-                     << Reset;
+                cout << Red << "Invalid choice, Please try again\n" << Reset;
             }
         } while (true);
     }
@@ -716,16 +853,14 @@ public:
     void createElection()
     {
         // Logic to create an election
-        cout << Green << "Election created successfully.\n"
-             << Reset;
+        cout << Green << "Election created successfully.\n" << Reset;
     }
 
     void addCandidate()
     {
         candidate::setDetails();
         candidate::saveToFile();
-        cout << Green << "Candidate added successfully.\n"
-        << Reset;
+        cout << Green << "Candidate added successfully.\n"<< Reset;
     }
     void updatecandidateInfo()
     {
@@ -736,8 +871,7 @@ public:
     {
         voter::setDetails();
         voter::saveToFile();
-        cout << Green << "New voter added successfully.\n"
-             << Reset;
+        cout << Green << "New voter added successfully.\n" << Reset;
     }
     void updatevoterInfo()
     {
@@ -746,53 +880,56 @@ public:
 
     void removeCandidate()
     {
-        // Logic to remove a candidate
-        cout << Green << "Candidate removed successfully.\n"
-             << Reset;
+        candidate::removeCandidate();
+        cout << Green << "Candidate removed successfully.\n"<< Reset;
     }
 
     void removeVoter()
     {
-        // Logic to remove a voter
-        cout << Green << "Voter removed successfully.\n"
-             << Reset;
+        deleteVoter();
+        cout << Green << "Voter removed successfully.\n"<< Reset;
     }
 
     void showResults()
     {
+        string a;
         int choice;
         cout<<"Choose the Election you want result of:"<<endl;
         cout<<"1. National Election"<<endl;
-        cout<<"2. Provinsial Election"<<endl;
+        cout<<"2. Provincial Election"<<endl;
+        cout<<"3. Area Wise Result"<<endl;
         cin>>choice;
         switch (choice)
         {
         case 1:
             Result::showLeadingParty();
+            Graph::drawPartyGraph();
             break;
         case 2:
             
             break;
+        case 3:
+            cout<<"Enter Area you want Result of: ";
+            cin>>a;
+            showAreaResults(a);
+            drawCandidateGraph(a);
         default:
             cout<<"Invalid Input"<<endl;
             break;
         }
-        cout << Green << "Displaying election results...\n"
-             << Reset;
+        cout << Green << "Displaying election results...\n"<< Reset;
     }
 
     void reset()
     {
         Result::resetResults();
-        cout << Green << "Election data has been reset.\n"
-             << Reset;
+        cout << Green << "Election data has been reset.\n"<< Reset;
     }
 
-    void deleteAllVotes()
+    void deleteAllVoters()
     {
-        // Logic to delete all votes
-        cout << Green << "All votes have been deleted.\n"
-           << Reset;
+        deleteAllVoters();
+        cout << Green << "All voters have been deleted.\n"<< Reset;
     }
 
     void showrole() override
@@ -931,7 +1068,7 @@ class national_election: public candidate
 
 };
 
-class Result :virtual public candidate 
+class Result :virtual public candidate ,public Graph
 {
     private:
         string status;  // "Won" or "Lost"
@@ -939,7 +1076,8 @@ class Result :virtual public candidate
     public:
         Result() {}
     
-        Result(const candidate& c, string winStatus) {
+        Result(const candidate& c, string winStatus) 
+        {
             setname(c.getname());
             setage(c.getage());
             setcity(c.getcity());
@@ -965,9 +1103,11 @@ class Result :virtual public candidate
     
         
     
-        void saveResultToFile() const {
+        void saveResultToFile() const 
+        {
             ofstream file("result.txt", ios::app);
-            if (file.is_open()) {
+            if (file.is_open()) 
+            {
                 file << "Candidate Name: " << getname() << endl;
                 file << "Party: " << party << endl;
                 file << "Symbol: " << symbol << endl;
@@ -977,24 +1117,32 @@ class Result :virtual public candidate
                 file << "--------------------------" << endl;
                 file.close();
                 cout << Green << "Result saved for " << getname() << "." << Reset << endl;
-            } else {
+            } 
+            else 
+            {
                 cout << Red << "Error writing to result.txt!" << Reset << endl;
             }
         }
     
-        static void resetResults() {
+        static void resetResults() 
+        {
             ofstream file("result.txt", ios::trunc);
-            if (file.is_open()) {
+            if (file.is_open()) 
+            {
                 file.close();
                 cout << Yellow << "All results have been reset." << Reset << endl;
-            } else {
+            } 
+            else 
+            {
                 cout << Red << "Error resetting result.txt!" << Reset << endl;
             }
         }
     
-        static void showAreaResults(const string& areaName) {
+        static void showAreaResults(const string& areaName) 
+        {
             ifstream file("candidates.txt");
-            if (!file.is_open()) {
+            if (!file.is_open()) 
+            {
                 cout << Red << "Error opening candidates.txt!" << Reset << endl;
                 return;
             }
@@ -1006,7 +1154,8 @@ class Result :virtual public candidate
     
             string name, age, cnic, city, role, password, party, symbol, area, votes, eligibility, line;
     
-            while (getline(file, name)) {
+            while (getline(file, name)) 
+            {
                 getline(file, age);
                 getline(file, cnic);
                 getline(file, city);
@@ -1019,7 +1168,8 @@ class Result :virtual public candidate
                 getline(file, eligibility);
                 getline(file, line); // Separator ----------
     
-                if (area == areaName && count < MAX_CANDIDATES) {
+                if (area == areaName && count < MAX_CANDIDATES) 
+                {
                     results[count].setname(name);
                     results[count].setage(stoi(age));
                     results[count].setcity(city);
@@ -1039,7 +1189,8 @@ class Result :virtual public candidate
             }
             file.close();
     
-            if (count == 0) {
+            if (count == 0) 
+            {
                 cout << Red << "No candidates found for area: " << areaName << Reset << endl;
                 return;
             }
@@ -1133,6 +1284,124 @@ class Result :virtual public candidate
     
 };
 
+class Graph 
+{
+public:
+    static void drawPartyGraph() 
+    {
+        ifstream file("result.txt");
+        if (!file.is_open()) 
+        {
+            cout << Red << "Error opening result.txt!" << Reset << endl;
+            return;
+        }
+        const int MAX = 100;
+        string parties[MAX];
+        int wins[MAX] = {0};
+        int partyCount = 0;
+
+        string line, currentParty, currentStatus;
+    
+        while (getline(file, line)) 
+        {
+            if (line.find("Party:") == 0) 
+            {
+                currentParty = line.substr(7);
+            }
+            if (line.find("Result Status:") == 0) 
+            {
+                currentStatus = line.substr(15);
+                if (currentStatus == "Won") 
+                {        
+                    bool found = false;        
+                    for (int i = 0; i < partyCount; i++) 
+                    {
+                        if (parties[i] == currentParty) 
+                        {
+                            wins[i]++;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) 
+                    {
+                        parties[partyCount] = currentParty;
+                        wins[partyCount] = 1;
+                        partyCount++;
+                    }
+                }
+            }
+        }
+        file.close();
+    
+        cout << Bold << "\nParty-wise Winning Candidates Graph\n" << Reset;
+        for (int i = 0; i < partyCount; i++) 
+        {
+            cout << parties[i] << " | ";
+            for (int j = 0; j < wins[i]; j++)
+                cout << "█";
+            cout << " (" << wins[i] << ")" << endl;
+        }
+    }
+    
+    static void drawCandidateGraph(const string& areaName) 
+    {
+        ifstream file("result.txt");
+        if (!file.is_open()) 
+        {
+            cout << Red << "Error opening result.txt!" << Reset << endl;
+            return;
+        }
+        const int MAX = 100;
+        string names[MAX];
+        int votes[MAX] = {0};
+        string areas[MAX];
+        int count = 0;
+    
+        string line, currentName, currentArea, currentVotes;
+    
+        while (getline(file, line)) 
+        {
+            if (line.find("Candidate Name:") == 0) 
+            {
+                currentName = line.substr(17);
+            }
+            else if (line.find("Area:") == 0) 
+            {
+                currentArea = line.substr(6);
+            }
+            else if (line.find("Total Votes:") == 0) 
+            {
+                currentVotes = line.substr(13);
+            }
+            else if (line.find("Result Status:") == 0) 
+            {
+                if (currentArea == areaName && count < MAX) 
+                {
+                    names[count] = currentName;
+                    votes[count] = stoi(currentVotes);
+                    count++;
+                }
+            }
+        }
+        file.close();
+    
+        if (count == 0) 
+        {
+            cout << Red << "No candidates found for area: " << areaName << Reset << endl;
+            return;
+        }
+        cout << Bold << "\nCandidate-wise Vote Graph for Area: " << areaName << "\n" << Reset;
+        for (int i = 0; i < count; i++) 
+        {
+            cout << names[i] << " | ";    
+            for (int j = 0; j < votes[i]; j += 10)  // scale down
+                cout << "*";
+            cout << " (" << votes[i] << " votes)" << endl;
+        }
+    }
+};
+    
 int main()
 {
     login_page();
