@@ -938,135 +938,294 @@ public:
     }
 };
 
-class provincial :public candidate {
+class provincial 
+{
 private:
-    static const int MAX_CITIES = 50;
-    static const int MAX_CANDIDATES = 100;
     string provincename;
     int provinceid;
-    string cities[MAX_CITIES];
+    string* cities;
     int citycount;
-    candidate* candidates[MAX_CANDIDATES];
+    int cityCapacity;
+    candidate** candidates;
     int candidatecount;
-    int totalvotes;
-    struct Partyresult 
+    int candidateCapacity;
+    bool electionStarted;
+public:
+    provincial(string name = "", int id = 0): provincename(name), provinceid(id), citycount(0), cityCapacity(5),candidatecount(0), candidateCapacity(5), electionStarted(false) 
     {
-        string name;
-        int seats;
-    } 
-    partyresults[MAX_CANDIDATES];
-    int partycount;
+        cities = new string[cityCapacity];
+        candidates = new candidate*[candidateCapacity];
+    }
+    
+    ~provincial() 
+    {
+        delete[] cities;
+        delete[] candidates;
+    }
+    
+    void resizeCities() 
+    {
+        cityCapacity *= 2;
+        string* newCities = new string[cityCapacity];
+        for (int i = 0; i < citycount; i++)
+        {
+            newCities[i] = cities[i];
+        }
+        delete[] cities;
+        cities = newCities;
+    }
+    
+    void resizeCandidates() 
+    {
+        candidateCapacity *= 2;
+        candidate** newCandidates = new candidate*[candidateCapacity];
+        for (int i = 0; i < candidatecount; i++)
+        {
+            newCandidates[i] = candidates[i];
+        }
+        delete[] candidates;
+        candidates = newCandidates;
+    }
+    
+    void addCity(const string& city) 
+    {
+        if (citycount == cityCapacity)
+        {        
+            resizeCities();
+        }
+        cities[citycount++] = city;
+    }
+    
+    void loadCandidatesFromFile()
+    {
+        ifstream file("candidates.txt");
+        string name, age, cnic, city, role, password, party, symbol, area, votes, eligibility, sep;
+    
+        while (getline(file, name)) 
+        {
+            getline(file, age);
+            getline(file, cnic);
+            getline(file, city);
+            getline(file, role);
+            getline(file, password);
+            getline(file, party);
+            getline(file, symbol);
+            getline(file, area);
+            getline(file, votes);
+            getline(file, eligibility);
+            getline(file, sep);
+    
+            for (int i = 0; i < citycount; i++) 
+            {
+                if (cities[i] == area)
+                {
+                    if (candidatecount == candidateCapacity)
+                    {  
+                        resizeCandidates();
+                    }
+                    candidate* c = new candidate();
+                    c->setname(name);
+                    c->setage(stoi(age));
+                    c->setcnic(cnic);
+                    c->setcity(city);
+                    c->setrole(role);
+                    c->setpassword(password);
+                    c->setparty(party);
+                    c->setsymbol(symbol);
+                    c->setarea(area);
+                    c->setvotecount(stoi(votes));
+                    candidates[candidatecount++] = c;
+                    break;
+                }
+            }
+        }
+        file.close();
+    }
+    
+    void createElection() 
+    {
+        electionStarted = true;
+        cout << Green << "Provincial Election started in " << provincename << Reset << endl;
+    }
+    
+    void showCandidates() 
+    {
+        if (!electionStarted) 
+        {
+            cout << Yellow << "Election not started in " << provincename << Reset << endl;
+            return;
+        }
+        for (int i = 0; i < candidatecount; i++) 
+        {
+            candidates[i]->displaydetails();
+        }
+    }
+    
+    string getWinningParty()
+    {
+        string* parties = new string[candidatecount];
+        int* seats = new int[candidatecount];
+        int partycount = 0;
+    
+        for (int i = 0; i < candidatecount; i++) 
+        {
+            string pname = candidates[i]->getparty();
+            bool found = false;
+            for (int j = 0; j < partycount; j++) 
+            {
+                if (parties[j] == pname) 
+                {
+                    seats[j]++;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) 
+            {
+                parties[partycount] = pname;
+                seats[partycount++] = 1;
+            }
+        }
+    
+        int maxSeats = 0;
+        string winner = "None";
+        for (int i = 0; i < partycount; i++) 
+        {
+            if (seats[i] > maxSeats) 
+            {
+                maxSeats = seats[i];
+                winner = parties[i];
+            }
+        }
+    
+        delete[] parties;
+        delete[] seats;
+        return winner;
+    }
+    
+    int getCandidateCount() const 
+    {
+        return candidatecount;
+    }
+    
+    candidate* getCandidateAt(int index) 
+    {
+        return (index >= 0 && index < candidatecount) ? candidates[index] : nullptr;
+    }
+    
+    string getProvinceName() const
+    {
+        return provincename;
+    }
+    
+    bool hasStarted() const 
+    {
+         return electionStarted;
+    }
+};    
+
+class national_election 
+{
+private:
+    provincial** provinces;
+    int provinceCount;
+    int provinceCapacity;
     
 public:
-    provincial(string name, int id) :provincename(name), provinceid(id), citycount(0), candidatecount(0), totalvotes(0) {}
-    void addcity(const string& city) 
+    national_election() 
     {
-        if (citycount < MAX_CITIES) 
-        {
-            cities[citycount++] = city;
-        }
-        else 
-        {
-            cout << "Maximum cities limit reached " << endl;
-        }
-    }
-    int getcitycount() 
-    {
-        return citycount;
-    }
-    string getindec(int index) 
-    {
-        if (index >= 0 && index < citycount) 
-        {
-            return cities[index];
-        }
-        return "";
-    }
-    void addcandidate(candidate* candidate) 
-    {
-        if (candidatecount >= MAX_CANDIDATES) 
-        {
-            cout << "Maximum number of candidates have added " << endl;
-            return;
-        }
-        for (int i = 0; i < citycount; i++) 
-        {
-            if (cities[i] == candidate->getarea()) 
-            {
-                candidates[candidatecount++] = candidate;
-            }
-            return;
-        }
+        provinceCount = 0;
+        provinceCapacity = 3;
+        provinces = new provincial*[provinceCapacity];
     }
     
-    void calculatetotalvotes() 
-    {
-        totalvotes = 0;
-        for (int i = 0; i < candidatecount; i++) 
-        {
-            totalvotes += candidates[i]->getvotecount();
-        }
-        return;
-    }
-    string getWinningParty() 
+    ~national_election() 
     {        
-        int  partycount = 0;            
-        for (int i = 0; i < candidatecount; i++) 
+        delete[] provinces;
+    }
+    
+    void resizeProvinces() 
+    {
+        provinceCapacity *= 2;
+        provincial** newArray = new provincial*[provinceCapacity];
+        for (int i = 0; i < provinceCount; i++)
         {
-            if (candidates[i]->getvotecount() > 0) 
-            {   
-                bool found = false;
-                for (int j = 0; j < partycount; j++) 
+            newArray[i] = provinces[i];
+        }
+        delete[] provinces;
+        provinces = newArray;
+    }
+    
+    void addProvince(provincial* p) 
+    {
+        if (provinceCount == provinceCapacity)
+        {        
+            resizeProvinces();
+        }
+        provinces[provinceCount++] = p;
+    }
+    
+    void createElection() 
+    {
+        cout << Green << "National Election Started!\n" << Reset;
+        for (int i = 0; i < provinceCount; i++)
+        {
+            provinces[i]->createElection();
+        }
+    }
+    
+    void showAllCandidates() 
+    {
+        for (int i = 0; i < provinceCount; i++) 
+        {
+            cout << Cyan << "Province: " << provinces[i]->getProvinceName() << Reset << endl;
+            provinces[i]->showCandidates();
+        }
+    }
+    
+    string getNationalWinner() 
+    {
+        string* parties = new string[provinceCount];
+        int* wins = new int[provinceCount];
+        int partyCount = 0;
+
+        for (int i = 0; i < provinceCount; i++) 
+        {
+            string winner = provinces[i]->getWinningParty();
+            if (winner == "None") continue;
+            bool found = false;
+            for (int j = 0; j < partyCount; j++) 
+            {
+                if (parties[j] == winner) 
                 {
-                    if (partyresults[j].name == candidates[i]->getparty()) 
-                    {
-                        partyresults[j].seats++;
-                        found = true;
-                        break;
-                    }
+                    wins[j]++;
+                    found = true;
+                    break;
                 }
-                if (!found && partycount < MAX_CANDIDATES) 
-                {
-                    partyresults[partycount].name = candidates[i]->getparty();
-                    partyresults[partycount].seats = 1;
-                    partycount++;
-                }
+            }
+            if (!found) 
+            {
+                parties[partyCount] = winner;
+                wins[partyCount++] = 1;
             }
         }
     
-        string winningParty = "No winner";
-        int maxSeats = 0;
-        for (int i = 0; i < partycount; i++)
-        {    
-            if (partyresults[i].seats > maxSeats) 
-            {
-                maxSeats = partyresults[i].seats;
-                winningParty = partyresults[i].name;
-            }
-        }
-        return winningParty;
-    }
-    void sortCandidatesByName() 
-    {   
-        for (int i = 0; i < candidatecount - 1; i++) 
+        string nationalWinner = "No party";
+        int max = 0;
+        for (int i = 0; i < partyCount; i++) 
         {
-            for (int j = 0; j < candidatecount - i - 1; j++) 
+            if (wins[i] > max) 
             {
-                if (candidates[j]->getname() > candidates[j + 1]->getname()) 
-                {  
-                    candidate* temp = candidates[j];
-                    candidates[j] = candidates[j + 1];
-                    candidates[j + 1] = temp;
-                }
+                max = wins[i];
+                nationalWinner = parties[i];
             }
         }
-    }    
-};
-
-class national_election: public candidate
-{
-
-};
+    
+        delete[] parties;
+        delete[] wins;
+        return nationalWinner;
+    }
+};    
 
 class Result :virtual public candidate ,public Graph
 {
