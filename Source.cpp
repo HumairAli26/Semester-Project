@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -14,93 +14,75 @@ const string Magenta = "\033[35m";
 const string Bold = "\033[1m";
 const string Reset = "\033[0m";
 
-void interface_logo()
+string isOnlyDigitsAndHyphen(const string& input)
 {
-    cout << "=====================================================================" << endl;
-    cout << "#                   E - V O T I N G   S Y S T E M                   #" << endl;
-    cout << "=====================================================================" << endl;
-}
-
-void login_page()
-{
-    int n;
-    string entered_cnic, entered_pw;
-    interface_logo();
-    cout << "Enter Your CNIC: ";
-    cin.ignore();
-    getline(cin, entered_cnic);
-    cout << "Select your Role: " << endl;
-    cout << " 1. Voter \n 2. Candidate \n 3. Admin \n 0. Exit" << endl;
-    cin >> n;
-    cin.ignore();
-    cout << "Enter Password: ";
-    getline(cin, entered_pw);
-    ifstream file("user.txt");
-    string name, age, cnic, city, role, password, line;
-    bool found = false;
-    if (file.is_open())
+    while (true)
     {
-        while (getline(file, name))
+        bool valid = true;
+        for (char ch : input)
         {
-            getline(file, age);
-            getline(file, cnic);
-            getline(file, city);
-            getline(file, role);
-            getline(file, password);
-            getline(file, line);
-            if (cnic == entered_cnic && password == entered_pw)
+            if (!isdigit(ch) && ch != '-')
             {
-                found = true;
-                if ((n == 1 && role == "Voter") ||
-                    (n == 2 && role == "Candidate") ||
-                    (n == 3 && role == "Admin"))
-                {
-                    cout << "Login successful! Welcome " << role << " " << name << "!" << endl;
-                    if ((n == 1 && role == "Voter"))
-                    {
-                        //Voter Side function will be added When you make it
-                    }
-                    else if ((n == 2 && role == "Candidate"))
-                    {
-                        //Candidate Side function will be added When you make it
-                    }
-                    else if ((n == 3 && role == "Admin"))
-                    {
-                        
-                            
-                    }
-                }
-                else
-                {
-                    cout << "Role mismatch. Access denied." << endl;
-                }
+                valid = false;
                 break;
             }
         }
-        file.close();
-    }
-    else
-    {
-        cout << "Error opening user file." << endl;
-    }
-    if (!found)
-    {
-        cout << "CNIC or password incorrect." << endl;
+        if (valid && !input.empty())
+        {
+            return input;
+        }
+        else
+        {
+            cout << Red << "Invalid input! Only numbers and '-' are allowed.\n" << Reset;
+        }
     }
 }
-class Election {
 
-};
+string isonlyAlphabet(const string& input)
+{
+    while (true)
+    {
+        bool hasDigit = false;
+        for (char ch : input)
+        {
+            if (isdigit(ch)) {
+                hasDigit = true;
+                break;
+            }
+        }
+        if (hasDigit)
+        {
+            cout << Red << "You entered wrong data! Digits are not allowed.\n" << Reset;
+        }
+        else if (input.empty())
+        {
+            cout << Red << "Input cannot be empty.\n" << Reset;
+        }
+        else
+        {
+            return input;
+        }
+    }
+}
+
+
+void interface_logo()
+{
+    cout << "\t\t\t=====================================================================" << endl;
+    cout << Yellow << "\t\t\t#                   E - V O T I N G   S Y S T E M                   #"<<Reset << endl;
+    cout << "\t\t\t=====================================================================" << endl;
+}
 
 class user
 {
-protected:
+private:
     string name;
     int age;
     string city;
     string cnic;
-    string role;//humain bataye ga kay user admin hai candidate hai ya voter hai
+    string role; // humain bataye ga kay user admin hai candidate hai ya voter hai
     string password;
+
 public:
     user()
     {
@@ -122,61 +104,53 @@ public:
     }
     void setname(string n)
     {
-        cout << "Enter your name :" << endl;
-        cin >> n;
+        isonlyAlphabet(n);
         name = n;
     }
     void setage(int a)
     {
-        cout << "Enter your age :" << endl;
-        cin >> a;
         age = a;
     }
     void setcity(string c)
     {
-        cout << "Enter city name :" << endl;
-        cin >> c;
+        isonlyAlphabet(c);
         city = c;
     }
     void setcnic(string cn)
     {
-        cout << "Enter your cnic :" << endl;
-        cin >> cn;
+        isOnlyDigitsAndHyphen(cn);
         cnic = cn;
     }
     void setrole(string r)
     {
-        cout << "Enter your role :" << endl;
-        cin >> r;
+        isonlyAlphabet(r);
         role = r;
     }
     void setpassword(string p)
     {
-        cout << "Set your Password: " << endl;
-        cin >> p;
         password = p;
     }
     string getname() const
     {
         return name;
     }
-    int getage()
+    int getage() const
     {
         return age;
     }
-    string getcity()
+    string getcity() const
     {
         return city;
     }
-    string getcnic()
+    string getcnic() const
     {
         return cnic;
     }
-    string getrole()
+    string getrole() const
     {
         return role;
     }
-    string getpassword()
+    string getpassword() const
     {
         return password;
     }
@@ -191,7 +165,7 @@ public:
     virtual void showrole() = 0;
     void saveToFile()
     {
-        ofstream file("user.txt" );
+        ofstream file("user.txt", ios::app);
         if (file.is_open())
         {
             file << name << endl;
@@ -226,233 +200,362 @@ public:
             cout << "Error opening candidates file.\n";
         }
         // else
-          //   {
-           //  cout << "Error opening file for reading." << endl;
-          //   }
-      //~user() {}
+        //   {
+        //  cout << "Error opening file for reading." << endl;
+        //   }
+        //~user() {}
     }
 };
 
-
-class admin : public user {
-    Election* elections[MAX_ELECTION];
-    int electionCount;
-
-public:
-    admin(string name = "", int age = 0, string city = "", string cnic = "", string role = "Admin", string password = "")
-        : user(name, age, city, cnic, role, password), electionCount(0) {
-    }
-
-    void adminMenu() {
-        int choice;
-        do {
-            system("cls");
-            cout << "\t\t\t=========================================\n";
-            cout << "\t\t\t              ADMIN MENU        \n";
-            cout << "\t\t\t==========================================\n";
-            cout << "\t\t\t1. Create Election \n";
-            cout << "\t\t\t2. Add Candidate to Election \n";
-            cout << "\t\t\t3. Add New Voter \n";
-            cout << "\t\t\t4. Remove Candidate \n";
-            cout << "\t\t\t5. Remove Voter \n";
-            cout << "\t\t\t6. Show Results \n";
-            cout << "\t\t\t7. Reset \n";
-            cout << "\t\t\t8. Delete All Votes \n";
-            cout << "\t\t\t9. Logout\n";
-            cout << "\t\t\t===========================================\n";
-            cin >> choice;
-
-            switch (choice) {
-            case 1: createElection(); break;
-            case 2: addCandidate(); break;
-            case 3: addNewVoter(); break;
-            case 4: removeCandidate(); break;
-            case 5: removeVoter(); break;
-            case 6: showResults(); break;
-            case 7: reset(); break;
-            case 8: deleteAllVotes(); break;
-            case 9: cout << Green << "Logging out....\n" << Reset; return;
-            default: cout << Red << "Invalid choice, Please try again\n" << Reset;
-            }
-        } while (true);
-    }
-
-    void createElection() {
-        // Logic to create an election
-        cout << Green << "Election created successfully.\n" << Reset;
-    }
-
-    void addCandidate() {
-        // Logic to add a candidate
-        cout << Green << "Candidate added successfully.\n" << Reset;
-    }
-
-    void addNewVoter() {
-        // Logic to add a new voter
-        cout << Green << "New voter added successfully.\n" << Reset;
-    }
-
-    void removeCandidate() {
-        // Logic to remove a candidate
-        cout << Green << "Candidate removed successfully.\n" << Reset;
-    }
-
-    void removeVoter() {
-        // Logic to remove a voter
-        cout << Green << "Voter removed successfully.\n" << Reset;
-    }
-
-    void showResults() {
-        // Logic to show results
-        cout << Green << "Displaying election results...\n" << Reset;
-    }
-
-    void reset() {
-        // Logic to reset election data
-        cout << Green << "Election data has been reset.\n" << Reset;
-    }
-
-    void deleteAllVotes() {
-        // Logic to delete all votes
-        cout << Green << "All votes have been deleted.\n" << Reset;
-    }
-
-    void showrole() override {
-        cout << "Role: Admin\n";
-    }
-};
-class candidate : public user
+class candidate :virtual public user
 {
-private:
+protected:
     string electsymbol;
-    int specialno;
+    string CandidateID;
     string party;
     string symbol;
     string area;
     int votecount;
     bool eligibility;
+
 public:
-    candidate(string n, int a, string c, string cn, string r, string p, string es, int sn) :user(n, a, c, cn, r, p), specialno(sn), electsymbol(es) {};
-    int getspecialno()
+    candidate() : user(), party(""), symbol(""), area(""), votecount(0), eligibility(true) {}
+    candidate(string n, int a, string c, string cn, string r, string p, string es, string cID) : user(n, a, c, cn, r, p), CandidateID(cID), electsymbol(es) {};
+    string getCandidateID()
     {
-        return specialno;
+        return CandidateID;
     }
     string getelectsymbol()
     {
         return electsymbol;
     }
-    bool iseligble() {
+    bool iseligble()
+    {
         return eligibility && getage() >= 18;
     }
-    void showrole() override {
+    void showrole() override
+    {
         cout << "Role: Candidate (" << party << ")\n";
     }
-    //candidate() : user(), party(""), symbol(""), area(""), votecount(0), eligibility(true) {}//agr kush enter nai karta to default values store hon gi
+    string getrole() const { return "2"; }
     void setDetails()
     {
-        string n, p, s, c, a;
+        string n, p, s, c, a, cn, pw, id;
         int age;
-        string cn, pw;
+
         cout << "Enter candidate details:\n";
+
+        // Name
         cout << "Name: ";
         cin.ignore();
         getline(cin, n);
+        bool hasDigit = false;
+
+        // Check for digits using isdigit()
+        do {
+            hasDigit = false;
+            for (char ch : n) {
+                if (isdigit(ch)) {
+                    hasDigit = true;
+                    break;
+                }
+            }
+            if (n.empty() || hasDigit) {
+                cout << "Invalid name. It should not contain digits. Re-enter: ";
+                getline(cin, n);
+            }
+        } while (n.empty() || hasDigit);
+
         setname(n);
+
+
+        // Age
         cout << "Age: ";
-        cin >> age;
+        while (!(cin >> age) || age <= 0 || age > 120) {
+            cout << "Invalid age. Enter a number between 1 and 120: ";
+            cin.clear();
+            cin.ignore();
+        }
         setage(age);
-        cout << "Party: ";
-        cin.ignore();
-        getline(cin, p);
-        party = p;
-        cout << "Symbol: ";
-        getline(cin, s);
-        symbol = s;
-        cout << "City: ";
-        getline(cin, c);
-        setcity(c);
-        cout << "Area: ";
-        getline(cin, a);
-        area = a;
+        cin.ignore( ); // clear newline
+
+        
         cout << "CNIC: ";
         getline(cin, cn);
+        while (cn.empty()) {
+            cout << "CNIC cannot be empty. Re-enter: ";
+            getline(cin, cn);
+        }
         setcnic(cn);
-        cout << "Password: ";
+
+        cout << "City: ";
+        getline(cin, c);
+        do {
+            hasDigit = false;
+            for (char ch : c) {
+                if (isdigit(ch)) {
+                    hasDigit = true;
+                    break;
+                }
+            }
+            if (c.empty() || hasDigit) {
+                cout << "Invalid city. It should not contain digits. Re-enter: ";
+                getline(cin, c);
+            }
+        } while (c.empty() || hasDigit);
+        setcity(c);
+
+         setrole("Candidate");
+
+         cout << "Password: ";
         getline(cin, pw);
+        while (pw.empty()) {
+            cout << "Password cannot be empty. Re-enter: ";
+            getline(cin, pw);
+        }
         setpassword(pw);
+ 
+        cout << "Candidate ID: ";
+        getline(cin, id);
+        while (id.empty()) {
+            cout << "Candidate ID cannot be empty. Re-enter: ";
+            getline(cin, id);
+        }
+        CandidateID = id;
+
+       
+        cout << "Party: ";
+        getline(cin, p);
+        while (p.empty()) {
+            cout << "Party cannot be empty. Re-enter: ";
+            getline(cin, p);
+        }
+        party = p;
+
+    
+        cout << "Symbol: ";
+        getline(cin, s);
+        while (s.empty()) {
+            cout << "Symbol cannot be empty. Re-enter: ";
+            getline(cin, s);
+        }
+        symbol = s; 
+        cout << "Area: ";
+        getline(cin, a);
+        while (a.empty()) {
+            cout << "Area cannot be empty. Re-enter: ";
+            getline(cin, a);
+        }
+        area = a;
+ 
+        votecount = 0;
+        eligibility = 1;
     }
-    void update()
-    {
-        int choice;
-        cout << "what do you want to update" << endl;
-        cout << "1.party\n2.symbol\n3.area\n4.eligibility:" << endl;
-        cin >> choice;
+
+
+    void update() {
+        string targetCandidateID;
+        cout << "Enter the Candidate ID of the person you want to update: ";
         cin.ignore();
-        string newvalue;
-        switch (choice) {
-        case 1:
-            cout << "Enter new party: ";
-            getline(cin, newvalue);
-            party = newvalue;
-            break;
-        case 2:
-            cout << "Enter new symbol: ";
-            getline(cin, newvalue);
-            party = newvalue;
-            break;
-        case 3:
-            cout << "Enter new area: ";
-            getline(cin, newvalue);
-            party = newvalue;
-            break;
-        case 4:
-            cout << "set eligibility:\n 1 for eligible\n 2 for not eligible  ";
-            int e;
-            cin >> e;
-            eligibility = (e == 1);
-            break;
-        default:
-            cout << "invalid choice plz enter correct choice \n";
+        getline(cin, targetCandidateID);
+
+        ifstream fin("candidates.txt");
+        ofstream fout("temp.txt");
+
+        if (!fin || !fout) {
+            cout << Red << "Error opening file." << Reset << endl;
+            return;
+        }
+
+        string name, age, cnic, city, role, password, candidateID, party, symbol, area, votes, eligibility, sep;
+        bool found = false;
+
+        while (getline(fin, name)) {
+            getline(fin, age);
+            getline(fin, cnic);
+            getline(fin, city);
+            getline(fin, role);
+            getline(fin, password);
+            getline(fin, candidateID);
+            getline(fin, party);
+            getline(fin, symbol);
+            getline(fin, area);
+            getline(fin, votes);
+            getline(fin, eligibility);
+            getline(fin, sep); // ----------
+
+            if (candidateID == targetCandidateID)
+            {
+                found = true;
+                int choice;
+                cout << "\nMatch Found!\nUpdate Options:\n1. Area\n2. Password\n3. City\n4. CNIC\nEnter choice: ";
+                cin >> choice;
+                cin.ignore();
+
+                string newval;
+                switch (choice) {
+                case 1:
+                    cout << "Enter new Area: ";
+                    getline(cin, area);
+                    break;
+                case 2:
+                    cout << "Enter new Password: ";
+                    getline(cin, password);
+                    break;
+                case 3:
+                    cout << "Enter new City: ";
+                    getline(cin, city);
+                    break;
+                case 4:
+                    cout << "Enter new CNIC: ";
+                    getline(cin, cnic);
+                    break;
+                default:
+                    cout << "Invalid choice. No changes made.\n";
+                }
+                cout << Green << "Information updated successfully.\n" << Reset;
+            }
+
+            fout << name << endl;
+            fout << age << endl;
+            fout << cnic << endl;
+            fout << city << endl;
+            fout << role << endl;
+            fout << password << endl;
+            fout << candidateID << endl;
+            fout << party << endl;
+            fout << symbol << endl;
+            fout << area << endl;
+            fout << votes << endl;
+            fout << eligibility << endl;
+            fout << "----------" << endl;
+        }
+
+        fin.close();
+        fout.close();
+
+        remove("candidates.txt");
+        rename("temp.txt", "candidates.txt");
+
+        if (!found)
+        {
+            cout << Red << "No Candidate found with ID: " << targetCandidateID << Reset << endl;
         }
     }
-    string getparty() {
+
+    void setparty(string p) { party = p; }
+    void setsymbol(string s) { symbol = s; }
+    void setarea(string a) { area = a; }
+    void setvotecount(int v) { votecount = v; }
+    string getparty() const
+    {
         return party;
     }
-    string getsymbol() {
+    string getsymbol() const
+    {
         return symbol;
     }
-    string getarea() {
+    string getarea() const
+    {
         return area;
     }
-    int getvotecount() {
+    int getvotecount() const
+    {
         return votecount;
     }
-    void incrementvote() {
+    void incrementvote()
+    {
         votecount++;
     }
-    void resetvotecount() {
+    void resetvotecount()
+    {
         votecount = 0;
     }
-    void displaydetails() {
+    void displaydetails()
+    {
         user::displayuserinfo();
         cout << "\nCandidate Details:\n";
-
         cout << "Party: " << party << endl;
         cout << "Symbol: " << symbol << endl;
-
         cout << "Area: " << area << endl;
-
         cout << "Votes: " << votecount << endl;
         cout << "Eligible: " << (eligibility ? "Yes" : "No") << endl;
     }
-    void displayshorts() {
+    void displayshorts()
+    {
         cout << getname() << " (" << party << ") - " << symbol << " - Votes: " << votecount << endl;
     }
     bool matcharea(const string& voterarea)
-    {//copy constructor 
+    { // copy constructor
         if (area == voterarea)
         {
             return true;
+        }
+    }
+
+    void removeCandidate()
+    {
+        string targetCandidateID;
+        cout << "Enter the Candidate ID to remove: ";
+        cin.ignore();
+        getline(cin, targetCandidateID);
+
+        ifstream fin("candidate.txt");
+        ofstream fout("temp.txt");
+
+        if (!fin || !fout)
+        {
+            cout << Red << "Error opening file." << Reset << endl;
+            return;
+        }
+
+        string name, age, cnic, city, role, password, CandidateID, party, symbol, area, votes, eligible, sep;
+        bool found = false;
+
+        while (getline(fin, name))
+        {
+            getline(fin, age);
+            getline(fin, cnic);
+            getline(fin, city);
+            getline(fin, role);
+            getline(fin, password);
+            getline(fin, party);
+            getline(fin, symbol);
+            getline(fin, CandidateID);
+            getline(fin, area);
+            getline(fin, votes);
+            getline(fin, eligible);
+            getline(fin, sep);
+
+            if (CandidateID != targetCandidateID)
+            {
+                fout << name << endl;
+                fout << age << endl;
+                fout << cnic << endl;
+                fout << city << endl;
+                fout << role << endl;
+                fout << password << endl;
+                fout << party << endl;
+                fout << symbol << endl;
+                fout << area << endl;
+                fout << votes << endl;
+                fout << eligible << endl;
+                fout << "----------" << endl;
+            }
+            else
+            {
+                found = true;
+                cout << Yellow << "Candidate with ID " << targetCandidateID << " removed successfully." << Reset << endl;
+            }
+        }
+
+        fin.close();
+        fout.close();
+        remove("candidate.txt");
+        rename("temp.txt", "candidate.txt");
+        if (!found)
+        {
+            cout << Red << "No candidate found with ID: " << targetCandidateID << Reset << endl;
         }
     }
 
@@ -461,12 +564,14 @@ public:
         ofstream file("candidates.txt", ios::app);
         if (file.is_open())
         {
+            file << endl;
             file << getname() << endl;
             file << getage() << endl;
             file << getcnic() << endl;
             file << getcity() << endl;
             file << getrole() << endl;
             file << getpassword() << endl;
+            file << CandidateID << endl;
             file << party << endl;
             file << symbol << endl;
             file << area << endl;
@@ -481,163 +586,1373 @@ public:
     }
 };
 
-class voter : public user
+class voter : virtual public user
 {
 private:
     string voterID;
     bool hasvoted;
     string area;
+
 public:
-    voter() : user(), voterID(""), hasvoted(false) {}
-
-    voter(string n, int a, string c, string cn, string r, string p, string vid, string assigned_area) : user(n, a, c, cn, r, p), voterID(vid), hasvoted(false) {}
-
-    void sethasvoted(bool voted)
-    {
-        hasvoted = voted;
+    // Constructors
+    voter() : user(), voterID(""), hasvoted(false), area("") {}
+    voter(string n, int a, string c, string cn, string r, string p, string vid, string assigned_area)
+        : user(n, a, c, cn, r, p), voterID(vid), hasvoted(false), area(assigned_area) {
     }
 
-    bool gethasvoted() const
+    // Setters/Getters
+    void sethasvoted(bool voted) { hasvoted = voted; }
+    bool gethasvoted() const { return hasvoted; }
+    string getVoterID() const { return voterID; }
+    string getArea() const { return area; }
+
+    // Function to input voter details
+    void setDetails()
     {
-        return hasvoted;
+        string n, c, cn, pw, r = "Voter";
+        int age;
+        cout << "Enter voter details:\n";
+        cout << "Name: ";
+        cin.ignore();
+        getline(cin, n);
+        setname(n);
+        cout << "Age: ";
+        cin >> age;
+        setage(age);
+        cin.ignore();
+        cout << "City: ";
+        getline(cin, c);
+        setcity(c);
+        cout << "CNIC: ";
+        getline(cin, cn);
+        setcnic(cn);
+        cout << "Password: ";
+        getline(cin, pw);
+        setpassword(pw);
+        cout << "Voter ID: ";
+        getline(cin, voterID);
+        cout << "Area: ";
+        getline(cin, area);
+        setrole(r);
+        hasvoted = false;
     }
-    string chooseElectionType()
-    {
-        int electionChoice;
-        cout << "\nSelect the election type you want to vote in:" << endl;
-        cout << "1. National Election" << endl;
-        cout << "2. Provincial Election" << endl;
-        cout << "3. District Election" << endl;
-        cout << "4. Union Council Election" << endl;
-        cout << "Enter your choice (1-4): ";
-        cin >> electionChoice;
 
-        if (electionChoice == 1)
-            return "National";
-        else if (electionChoice == 2)
-            return "Provincial";
-        else if (electionChoice == 3)
-            return "District";
-        else if (electionChoice == 4)
-            return "Union Council";
-        else
-        {
-            cout << "Invalid election type selected!" << endl;
-            return "";
-        }
-    }
-    string selectCandidate(string electionType)
-    {
-        int candidateChoice;
-        cout << "\nSelect a candidate for " << electionType << " election:" << endl;
+    // Update voter info
+    void update() {
+        string targetVoterID;
+        cout << "Enter the Voter ID of the person you want to update: ";
+        cin.ignore();
+        getline(cin, targetVoterID);
 
-        if (electionType == "National")
-        {
-            cout << "1. Imran Khan" << endl;
-            cout << "2. Nawaz Sharif" << endl;
-            cout << "3. Bilawal Bhutto" << endl;
-        }
-        else if (electionType == "Provincial")
-        {
-            cout << "1. Shahbaz Sharif" << endl;
-            cout << "2. Mahmood Khan" << endl;
-            cout << "3. Murad Ali Shah" << endl;
-        }
-        else if (electionType == "District")
-        {
-            cout << "1. District Leader A" << endl;
-            cout << "2. District Leader B" << endl;
-            cout << "3. District Leader C" << endl;
-        }
-        else if (electionType == "Union Council")
-        {
-            cout << "1. UC Leader A" << endl;
-            cout << "2. UC Leader B" << endl;
-            cout << "3. UC Leader C" << endl;
-        }
-        else
-        {
-            cout << "Invalid election type!" << endl;
-            return "";
-        }
+        ifstream fin("voter.txt");
+        ofstream fout("temp.txt");
 
-        cout << "Enter your choice (1-3): ";
-        cin >> candidateChoice;
-
-        if (electionType == "National")
-        {
-            if (candidateChoice == 1) return "Imran Khan";
-            else if (candidateChoice == 2) return "Nawaz Sharif";
-            else if (candidateChoice == 3) return "Bilawal Bhutto";
-        }
-        else if (electionType == "Provincial")
-        {
-            if (candidateChoice == 1) return "Shahbaz Sharif";
-            else if (candidateChoice == 2) return "Mahmood Khan";
-            else if (candidateChoice == 3) return "Murad Ali Shah";
-        }
-        else if (electionType == "District")
-        {
-            if (candidateChoice == 1) return "District Leader A";
-            else if (candidateChoice == 2) return "District Leader B";
-            else if (candidateChoice == 3) return "District Leader C";
-        }
-        else if (electionType == "Union Council")
-        {
-            if (candidateChoice == 1) return "UC Leader A";
-            else if (candidateChoice == 2) return "UC Leader B";
-            else if (candidateChoice == 3) return "UC Leader C";
-        }
-
-        cout << "Invalid candidate selected!" << endl;
-        return "";
-    }
-    void castvote(string entered_voter_id, string entered_area)
-    {
-        if (entered_voter_id != voterID)
-        {
-            cout << "Invalid Voter ID. Access Denied!" << endl;
+        if (!fin || !fout) {
+            cout << Red << "Error opening file." << Reset << endl;
             return;
         }
-        if (area != entered_area)
-        {
-            cout << "Area mismatch! You can only vote in your registered area: " << area << endl;
-            return;
+
+        string name, age, cnic, city, role, password, voterID, area, hasvoted, sep;
+        bool found = false;
+
+        while (getline(fin, name)) {
+            getline(fin, age);
+            getline(fin, cnic);
+            getline(fin, city);
+            getline(fin, role);
+            getline(fin, password);
+            getline(fin, voterID);
+            getline(fin, area);
+            getline(fin, hasvoted);
+            getline(fin, sep);
+
+            if (voterID == targetVoterID) {
+                found = true;
+                int choice;
+                cout << "\nMatch Found!\nUpdate Options:\n1. Area\n2. Password\n3. City\n4. CNIC\nEnter choice: ";
+                cin >> choice;
+                cin.ignore();
+
+                string newval;
+                switch (choice) {
+                case 1:
+                    cout << "Enter new Area: ";
+                    getline(cin, area);
+                    break;
+                case 2:
+                    cout << "Enter new Password: ";
+                    getline(cin, password);
+                    break;
+                case 3:
+                    cout << "Enter new City: ";
+                    getline(cin, city);
+                    break;
+                case 4:
+                    cout << "Enter new CNIC: ";
+                    getline(cin, cnic);
+                    break;
+                default:
+                    cout << "Invalid choice. No changes made.\n";
+                }
+                cout << Green << "Information updated successfully.\n" << Reset;
+            }
+
+            // Write the record (updated or not)
+            fout << name << endl;
+            fout << age << endl;
+            fout << cnic << endl;
+            fout << city << endl;
+            fout << role << endl;
+            fout << password << endl;
+            fout << voterID << endl;
+            fout << area << endl;
+            fout << hasvoted << endl;
+            fout << "----------" << endl;
         }
+
+        fin.close();
+        fout.close();
+
+        // Replace original file
+        remove("voter.txt");
+        rename("temp.txt", "voter.txt");
+
+        if (!found) {
+            cout << Red << "No voter found with ID: " << targetVoterID << Reset << endl;
+        }
+    }
+
+    void cast_vote(const string& voterID_loggedIn)
+    {
         if (hasvoted)
         {
-            cout << getname() << ", you have already cast your vote!" << endl;
+            cout << Red << "You have already cast your vote. Multiple votes are not allowed." << Reset << endl;
             return;
         }
 
-        string electionType = chooseElectionType();
-        if (electionType == "") return;
+        ifstream efile("elections.txt");
+        if (!efile.is_open())
+        {
+            cout << Red << "No election has been created yet." << Reset << endl;
+            return;
+        }
 
-        string selectedCandidate = selectCandidate(electionType);
-        if (selectedCandidate == "") return;
+        int electionCount = 0;
+        string line;
+        while (getline(efile, line)) electionCount++;
+        efile.close();
 
-        hasvoted = true;
+        if (electionCount == 0)
+        {
+            cout << Red << "No elections available." << Reset << endl;
+            return;
+        }
 
-        cout << "\n" << getname() << " has successfully voted for " << selectedCandidate
-            << " in the " << electionType << " election!" << endl;
+        string* elections = new string[electionCount];
+        ifstream efile2("elections.txt");
+        cout << Bold << "\nAvailable Elections:\n" << Reset;
+        for (int i = 0; i < electionCount; i++)
+        {
+            getline(efile2, elections[i]);
+            cout << i + 1 << ". " << elections[i] << endl;
+        }
+        efile2.close();
+
+        int choice;
+        cout << "Enter the number of the election you want to vote in: ";
+        cin >> choice;
+        cin.ignore();
+
+        if (choice < 1 || choice > electionCount)
+        {
+            cout << Red << "Invalid election choice." << Reset << endl;
+            delete[] elections;
+            return;
+        }
+
+        string selectedElection = elections[choice - 1];
+        delete[] elections;
+
+        ifstream fin("candidates.txt");
+        if (!fin.is_open())
+        {
+            cout << Red << "Could not open candidates file." << Reset << endl;
+            return;
+        }
+
+        int candCount = 0;
+        while (getline(fin, line))
+        {
+            for (int i = 0; i < 11; i++) getline(fin, line);
+            getline(fin, line);
+            if (line == area) candCount++;
+        }
+        fin.close();
+
+        if (candCount == 0)
+        {
+            cout << Red << "No candidates found in your area." << Reset << endl;
+            return;
+        }
+
+        string* candID = new string[candCount];
+        string* candName = new string[candCount];
+        string* candParty = new string[candCount];
+        string* candSymbol = new string[candCount];
+
+        ifstream fin2("candidates.txt");
+        int idx = 0;
+        while (getline(fin2, line))
+        {
+            string name = line, age, cnic, city, role, pw, cid, party, symbol, cArea, votes, elig, sep;
+            getline(fin2, age); getline(fin2, cnic); getline(fin2, city);
+            getline(fin2, role); getline(fin2, pw); getline(fin2, cid);
+            getline(fin2, party); getline(fin2, symbol); getline(fin2, cArea);
+            getline(fin2, votes); getline(fin2, elig); getline(fin2, sep);
+
+            if (cArea == area && idx < candCount)
+            {
+                candID[idx] = cid;
+                candName[idx] = name;
+                candParty[idx] = party;
+                candSymbol[idx] = symbol;
+                idx++;
+            }
+        }
+        fin2.close();
+
+        cout << Bold << "\nCandidates in your area (" << area << "):\n" << Reset;
+        for (int i = 0; i < candCount; i++)
+        {
+            cout << i + 1 << ". " << candName[i] << " (" << candParty[i] << ", " << candSymbol[i] << ")\n";
+        }
+
+        cout << "Enter the number of the candidate you want to vote for: ";
+        int candChoice;
+        cin >> candChoice;
+        cin.ignore();
+
+        if (candChoice < 1 || candChoice > candCount)
+        {
+            cout << Red << "Invalid candidate choice." << Reset << endl;
+            delete[] candID; delete[] candName; delete[] candParty; delete[] candSymbol;
+            return;
+        }
+
+        string chosenID = candID[candChoice - 1];
+        delete[] candID; delete[] candName; delete[] candParty; delete[] candSymbol;
+
+        ifstream fin3("candidates.txt");
+        ofstream fout("temp.txt");
+
+        while (getline(fin3, line))
+        {
+            fout << line << endl;
+            for (int i = 0; i < 10; i++)
+            {
+                getline(fin3, line);
+                fout << line << endl;
+            }
+            string voteStr;
+            getline(fin3, voteStr);
+            int v = stoi(voteStr);
+            string cid; getline(fin3, cid);
+            if (cid == chosenID) v++;
+            fout << v << endl;
+            fout << cid << endl;
+        }
+
+        fin3.close(); fout.close();
+        remove("candidates.txt");
+        rename("temp.txt", "candidates.txt");
+
+        ifstream vin("voters.txt");
+        ofstream vout("temp_v.txt");
+
+        while (getline(vin, line))
+        {
+            fout << line << endl;
+            for (int i = 0; i < 7; i++)
+            {
+                getline(vin, line); fout << line << endl;
+            }
+            getline(vin, line); // hasvoted
+            fout << (line == voterID_loggedIn ? "1" : line) << endl;
+            getline(vin, line); fout << line << endl; // sep
+        }
+
+        vin.close(); vout.close();
+        remove("voters.txt");
+        rename("temp_v.txt", "voters.txt");
+
+        sethasvoted(true);
+        cout << Green << "Your vote has been cast successfully. Thank you!\n" << Reset;
     }
 
-    void displayinfo()
+    // Display full info
+    void displayDetails() {
+        user::displayuserinfo();
+        cout << "Voter ID: " << voterID << "\n";
+        cout << "Area: " << area << "\n";
+        cout << "Voted: " << (hasvoted ? "Yes" : "No") << "\n";
+    }
+
+    // Display short info
+    void displayShort() {
+        cout << getname() << " - ID: " << voterID << " - Area: " << area << " - Voted: "
+            << (hasvoted ? "Yes" : "No") << endl;
+    }
+
+    // Save voter to file
+    void saveToFile() {
+        ofstream file("voters.txt", ios::app);
+        if (file.is_open()) {
+            file << getname() << endl;
+            file << getage() << endl;
+            file << getcnic() << endl;
+            file << getcity() << endl;
+            file << getrole() << endl;
+            file << getpassword() << endl;
+            file << voterID << endl;
+            file << area << endl;
+            file << hasvoted << endl;
+            file << "----------" << endl;
+            file.close();
+            cout << "Voter saved successfully!\n";
+        }
+        else {
+            cout << "Error saving voter to file.\n";
+        }
+    }
+
+    void deleteVoter()
     {
-        cout << "Name: " << getname() << endl;
-        cout << "Age: " << getage() << endl;
-        cout << "City: " << getcity() << endl;
-        cout << "CNIC: " << getcnic() << endl;
-        cout << "Voter ID: " << voterID << endl;
-        cout << "Has Voted: " << (hasvoted ? "Yes" : "No") << endl;
+        string targetVoterID;
+        cout << "Enter the Voter ID to remove: ";
+        cin.ignore();
+        getline(cin, targetVoterID);
+
+        ifstream fin("voters.txt");
+        ofstream fout("temp.txt");
+
+        if (!fin || !fout)
+        {
+            cout << Red << "Error opening file." << Reset << endl;
+            return;
+        }
+
+        string name, age, cnic, city, role, password, voterID, area, hasvoted, sep;
+        bool found = false;
+
+        while (getline(fin, name))
+        {
+            getline(fin, age);
+            getline(fin, cnic);
+            getline(fin, city);
+            getline(fin, role);
+            getline(fin, password);
+            getline(fin, voterID);
+            getline(fin, area);
+            getline(fin, hasvoted);
+            getline(fin, sep);  // ----------
+
+            if (voterID == targetVoterID)
+            {
+                found = true;
+                cout << Yellow << "Voter with ID " << voterID << " removed successfully." << Reset << endl;
+                continue;
+            }
+
+            fout << name << endl;
+            fout << age << endl;
+            fout << cnic << endl;
+            fout << city << endl;
+            fout << role << endl;
+            fout << password << endl;
+            fout << voterID << endl;
+            fout << area << endl;
+            fout << hasvoted << endl;
+            fout << "----------" << endl;
+        }
+
+        fin.close();
+        fout.close();
+        remove("voters.txt");
+        rename("temp.txt", "voters.txt");
+        if (!found)
+        {
+            cout << Red << "No voter found with ID: " << targetVoterID << Reset << endl;
+        }
+    }
+
+    void deleteAllVoters()
+    {
+        ofstream file("voters.txt", ios::trunc);
+        if (file.is_open())
+        {
+            file.close();
+            cout << Yellow << "All voter records have been deleted successfully." << Reset << endl;
+        }
+        else
+        {
+            cout << Red << "Error: Unable to open voters.txt for deletion." << Reset << endl;
+        }
+    }
+
+    // Area match check
+    bool matchArea(const string& voterArea) {
+        return area == voterArea;
+    }
+
+    // Overridden role display
+    void showrole() override {
+        cout << "Role: Voter\n";
+    }
+};
+
+class Graph
+{
+public:
+    static void drawPartyGraph()
+    {
+        ifstream file("result.txt");
+        if (!file.is_open())
+        {
+            cout << Red << "Error opening result.txt!" << Reset << endl;
+            return;
+        }
+        const int MAX = 100;
+        string parties[MAX];
+        int wins[MAX] = { 0 };
+        int partyCount = 0;
+
+        string line, currentParty, currentStatus;
+
+        while (getline(file, line))
+        {
+            if (line.find("Party:") == 0)
+            {
+                currentParty = line.substr(7);
+            }
+            if (line.find("Result Status:") == 0)
+            {
+                currentStatus = line.substr(15);
+                if (currentStatus == "Won")
+                {
+                    bool found = false;
+                    for (int i = 0; i < partyCount; i++)
+                    {
+                        if (parties[i] == currentParty)
+                        {
+                            wins[i]++;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        parties[partyCount] = currentParty;
+                        wins[partyCount] = 1;
+                        partyCount++;
+                    }
+                }
+            }
+        }
+        file.close();
+
+        cout << Bold << "\nParty-wise Winning Candidates Graph\n" << Reset;
+        for (int i = 0; i < partyCount; i++)
+        {
+            cout << parties[i] << " | ";
+            for (int j = 0; j < wins[i]; j++)
+                cout << "█";
+            cout << " (" << wins[i] << ")" << endl;
+        }
+    }
+
+    static void drawCandidateGraph(const string& areaName)
+    {
+        ifstream file("result.txt");
+        if (!file.is_open())
+        {
+            cout << Red << "Error opening result.txt!" << Reset << endl;
+            return;
+        }
+        const int MAX = 100;
+        string names[MAX];
+        int votes[MAX] = { 0 };
+        string areas[MAX];
+        int count = 0;
+
+        string line, currentName, currentArea, currentVotes;
+
+        while (getline(file, line))
+        {
+            if (line.find("Candidate Name:") == 0)
+            {
+                currentName = line.substr(17);
+            }
+            else if (line.find("Area:") == 0)
+            {
+                currentArea = line.substr(6);
+            }
+            else if (line.find("Total Votes:") == 0)
+            {
+                currentVotes = line.substr(13);
+            }
+            else if (line.find("Result Status:") == 0)
+            {
+                if (currentArea == areaName && count < MAX)
+                {
+                    names[count] = currentName;
+                    votes[count] = stoi(currentVotes);
+                    count++;
+                }
+            }
+        }
+        file.close();
+
+        if (count == 0)
+        {
+            cout << Red << "No candidates found for area: " << areaName << Reset << endl;
+            return;
+        }
+        cout << Bold << "\nCandidate-wise Vote Graph for Area: " << areaName << "\n" << Reset;
+        for (int i = 0; i < count; i++)
+        {
+            cout << names[i] << " | ";
+            for (int j = 0; j < votes[i]; j += 10)  // scale down
+                cout << "*";
+            cout << " (" << votes[i] << " votes)" << endl;
+        }
+    }
+};
+
+class Result :virtual public candidate, virtual public Graph
+{
+private:
+    string status;  // "Won" or "Lost"
+
+public:
+    Result() {}
+
+    Result(const candidate& c, string winStatus)
+    {
+        setname(c.getname());
+        setage(c.getage());
+        setcity(c.getcity());
+        setcnic(c.getcnic());
+        setrole(c.getrole());
+        setpassword(c.getpassword());
+
+        party = c.getparty();
+        symbol = c.getsymbol();
+        area = c.getarea();
+        votecount = c.getvotecount();
+
+        status = winStatus;
+    }
+
+    void setStatus(string s) {
+        status = s;
+    }
+
+    string getStatus() const {
+        return status;
+    }
+
+    void saveResultToFile() const
+    {
+        ofstream file("result.txt", ios::app);
+        if (file.is_open())
+        {
+            file << "Candidate Name: " << getname() << endl;
+            file << "Party: " << party << endl;
+            file << "Symbol: " << symbol << endl;
+            file << "Area: " << area << endl;
+            file << "Total Votes: " << votecount << endl;
+            file << "Result Status: " << status << endl;
+            file << "--------------------------" << endl;
+            file.close();
+            cout << Green << "Result saved for " << getname() << "." << Reset << endl;
+        }
+        else
+        {
+            cout << Red << "Error writing to result.txt!" << Reset << endl;
+        }
+    }
+
+    static void resetResults()
+    {
+        ofstream file("result.txt", ios::trunc);
+        if (file.is_open())
+        {
+            file.close();
+            cout << Yellow << "All results have been reset." << Reset << endl;
+        }
+        else
+        {
+            cout << Red << "Error resetting result.txt!" << Reset << endl;
+        }
+    }
+
+    static void showAreaResults(const string& areaName)
+    {
+        ifstream file("candidates.txt");
+        if (!file.is_open())
+        {
+            cout << Red << "Error opening candidates.txt!" << Reset << endl;
+            return;
+        }
+
+        const int MAX_CANDIDATES = 100;
+        Result results[MAX_CANDIDATES];
+        int count = 0;
+        int highestVotes = -1;
+
+        string name, age, cnic, city, role, password, party, symbol, area, votes, eligibility, line;
+
+        while (getline(file, name))
+        {
+            getline(file, age);
+            getline(file, cnic);
+            getline(file, city);
+            getline(file, role);
+            getline(file, password);
+            getline(file, party);
+            getline(file, symbol);
+            getline(file, area);
+            getline(file, votes);
+            getline(file, eligibility);
+            getline(file, line); // Separator ----------
+
+            if (area == areaName && count < MAX_CANDIDATES)
+            {
+                results[count].setname(name);
+                results[count].setage(stoi(age));
+                results[count].setcity(city);
+                results[count].setcnic(cnic);
+                results[count].setrole(role);
+                results[count].setpassword(password);
+                results[count].setparty(party);
+                results[count].setsymbol(symbol);
+                results[count].setarea(area);
+                results[count].setvotecount(stoi(votes));
+
+                if (stoi(votes) > highestVotes)
+                    highestVotes = stoi(votes);
+
+                count++;
+            }
+        }
+        file.close();
+
+        if (count == 0)
+        {
+            cout << Red << "No candidates found for area: " << areaName << Reset << endl;
+            return;
+        }
+
+        cout << Bold << "\nResults for area: " << areaName << "\n" << Reset;
+
+        for (int i = 0; i < count; i++)
+        {
+            if (results[i].getvotecount() == highestVotes)
+                results[i].setStatus("Won");
+            else
+                results[i].setStatus("Lost");
+
+            results[i].saveResultToFile();
+            cout << "----------------------------------" << endl;
+            cout << "Candidate: " << results[i].getname() << endl;
+            cout << "Party: " << results[i].getparty() << endl;
+            cout << "Symbol: " << results[i].getsymbol() << endl;
+            cout << "Votes: " << results[i].getvotecount() << endl;
+            cout << "Status: " << results[i].getStatus() << endl;
+        }
+    }
+
+    void showLeadingParty()
+    {
+        ifstream file("result.txt");
+        if (!file.is_open())
+        {
+            cout << Red << "Error opening result.txt!" << Reset << endl;
+            return;
+        }
+        const int MAX_RECORDS = 1000;
+        string parties[MAX_RECORDS];
+        int wins[MAX_RECORDS] = { 0 };
+        int partyCount = 0;
+
+        string line, currentParty, currentStatus;
+
+        while (getline(file, line))
+        {
+            if (line.find("Party:") == 0)
+            {
+                currentParty = line.substr(7);
+            }
+            if (line.find("Result Status:") == 0)
+            {
+                currentStatus = line.substr(15);
+                if (currentStatus == "Won")
+                {
+                    bool found = false;
+                    for (int i = 0; i < partyCount; i++)
+                    {
+                        if (parties[i] == currentParty)
+                        {
+                            wins[i]++;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        parties[partyCount] = currentParty;
+                        wins[partyCount] = 1;
+                        partyCount++;
+                    }
+                }
+            }
+        }
+        file.close();
+        if (partyCount == 0)
+        {
+            cout << Red << "No winning candidates found in result.txt!" << Reset << endl;
+            return;
+        }
+        int maxIndex = 0;
+        for (int i = 1; i < partyCount; i++)
+        {
+            if (wins[i] > wins[maxIndex])
+            {
+                maxIndex = i;
+            }
+        }
+        cout << Bold << "\nParty Wins Summary:\n" << Reset;
+        for (int i = 0; i < partyCount; i++)
+        {
+            cout << parties[i] << ": " << wins[i] << " winning candidate(s)" << endl;
+        }
+        cout << Green << "\nLeading Party: " << Bold << parties[maxIndex]
+            << Reset << Green << " with " << wins[maxIndex] << " winning candidates!" << Reset << endl;
+    }
+
+};
+
+
+class provincial
+{
+private:
+    string provincename;
+    int provinceid;
+    string* cities;
+    int citycount;
+    int cityCapacity;
+    candidate** candidates;
+    int candidatecount;
+    int candidateCapacity;
+    bool electionStarted;
+public:
+    provincial(string name = "", int id = 0) : provincename(name), provinceid(id), citycount(0), cityCapacity(5), candidatecount(0), candidateCapacity(5), electionStarted(false)
+    {
+        cities = new string[cityCapacity];
+        candidates = new candidate * [candidateCapacity];
+    }
+
+    ~provincial()
+    {
+        delete[] cities;
+        delete[] candidates;
+    }
+
+    void resizeCities()
+    {
+        cityCapacity *= 2;
+        string* newCities = new string[cityCapacity];
+        for (int i = 0; i < citycount; i++)
+        {
+            newCities[i] = cities[i];
+        }
+        delete[] cities;
+        cities = newCities;
+    }
+
+    void resizeCandidates()
+    {
+        candidateCapacity *= 2;
+        candidate** newCandidates = new candidate * [candidateCapacity];
+        for (int i = 0; i < candidatecount; i++)
+        {
+            newCandidates[i] = candidates[i];
+        }
+        delete[] candidates;
+        candidates = newCandidates;
+    }
+
+    void addCity(const string& city)
+    {
+        if (citycount == cityCapacity)
+        {
+            resizeCities();
+        }
+        cities[citycount++] = city;
+    }
+
+    void loadCandidatesFromFile()
+    {
+        ifstream file("candidates.txt");
+        string name, age, cnic, city, role, password, party, symbol, area, votes, eligibility, sep;
+
+        while (getline(file, name))
+        {
+            getline(file, age);
+            getline(file, cnic);
+            getline(file, city);
+            getline(file, role);
+            getline(file, password);
+            getline(file, party);
+            getline(file, symbol);
+            getline(file, area);
+            getline(file, votes);
+            getline(file, eligibility);
+            getline(file, sep);
+
+            for (int i = 0; i < citycount; i++)
+            {
+                if (cities[i] == area)
+                {
+                    if (candidatecount == candidateCapacity)
+                    {
+                        resizeCandidates();
+                    }
+                    candidate* c = new candidate();
+                    c->setname(name);
+                    c->setage(stoi(age));
+                    c->setcnic(cnic);
+                    c->setcity(city);
+                    c->setrole(role);
+                    c->setpassword(password);
+                    c->setparty(party);
+                    c->setsymbol(symbol);
+                    c->setarea(area);
+                    c->setvotecount(stoi(votes));
+                    candidates[candidatecount++] = c;
+                    break;
+                }
+            }
+        }
+        file.close();
+    }
+
+    void createElection()
+    {
+        electionStarted = true;
+        cout << Green << "Provincial Election started in " << provincename << Reset << endl;
+        loadCandidatesFromFile();
+        showCandidates();
+
+    }
+
+    void showCandidates()
+    {
+        if (!electionStarted)
+        {
+            cout << Yellow << "Election not started in " << provincename << Reset << endl;
+            return;
+        }
+        cout << "\nCandidates in Provincial election held  in  " << provincename << endl;
+        for (int i = 0; i < candidatecount; i++)
+        {
+            candidates[i]->displaydetails();
+        }
+    }
+
+    string getWinningParty()
+    {
+        string* parties = new string[candidatecount];
+        int* seats = new int[candidatecount];
+        int partycount = 0;
+
+        for (int i = 0; i < candidatecount; i++)
+        {
+            string pname = candidates[i]->getparty();
+            bool found = false;
+            for (int j = 0; j < partycount; j++)
+            {
+                if (parties[j] == pname)
+                {
+                    seats[j]++;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                parties[partycount] = pname;
+                seats[partycount++] = 1;
+            }
+        }
+
+        int maxSeats = 0;
+        string winner = "None";
+        for (int i = 0; i < partycount; i++)
+        {
+            if (seats[i] > maxSeats)
+            {
+                maxSeats = seats[i];
+                winner = parties[i];
+            }
+        }
+
+        delete[] parties;
+        delete[] seats;
+        return winner;
+    }
+
+    int getCandidateCount() const
+    {
+        return candidatecount;
+    }
+
+    candidate* getCandidateAt(int index)
+    {
+        return (index >= 0 && index < candidatecount) ? candidates[index] : nullptr;
+    }
+
+    string getProvinceName() const
+    {
+        return provincename;
+    }
+
+    bool hasStarted() const
+    {
+        return electionStarted;
+    }
+};
+
+class national_election
+{
+private:
+    provincial** provinces;
+    int provinceCount;
+    int provinceCapacity;
+
+public:
+    national_election()
+    {
+        provinceCount = 0;
+        provinceCapacity = 3;
+        provinces = new provincial * [provinceCapacity];
+    }
+
+    ~national_election()
+    {
+        delete[] provinces;
+    }
+
+    void resizeProvinces()
+    {
+        provinceCapacity *= 2;
+        provincial** newArray = new provincial * [provinceCapacity];
+        for (int i = 0; i < provinceCount; i++)
+        {
+            newArray[i] = provinces[i];
+        }
+        delete[] provinces;
+        provinces = newArray;
+    }
+
+    void addProvince(provincial* p)
+    {
+        if (provinceCount == provinceCapacity)
+        {
+            resizeProvinces();
+        }
+        provinces[provinceCount++] = p;
+    }
+
+    void createElection()
+    {
+        cout << Green << "National Election Started!\n" << Reset;
+        for (int i = 0; i < provinceCount; i++)
+        {
+            provinces[i]->createElection();
+        }
+    }
+
+    void showAllCandidates()
+    {
+        for (int i = 0; i < provinceCount; i++)
+        {
+            cout << Cyan << "Province: " << provinces[i]->getProvinceName() << Reset << endl;
+            provinces[i]->showCandidates();
+        }
+    }
+
+    string getNationalWinner()
+    {
+        string* parties = new string[provinceCount];
+        int* wins = new int[provinceCount];
+        int partyCount = 0;
+
+        for (int i = 0; i < provinceCount; i++)
+        {
+            string winner = provinces[i]->getWinningParty();
+            if (winner == "None") continue;
+            bool found = false;
+            for (int j = 0; j < partyCount; j++)
+            {
+                if (parties[j] == winner)
+                {
+                    wins[j]++;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                parties[partyCount] = winner;
+                wins[partyCount++] = 1;
+            }
+        }
+
+        string nationalWinner = "No party";
+        int max = 0;
+        for (int i = 0; i < partyCount; i++)
+        {
+            if (wins[i] > max)
+            {
+                max = wins[i];
+                nationalWinner = parties[i];
+            }
+        }
+
+        delete[] parties;
+        delete[] wins;
+        return nationalWinner;
+    }
+};
+
+class admin : public voter, public Result
+{
+    int electionCount;
+
+public:
+    admin(string name = "", int age = 0, string city = "", string cnic = "", string role = "Admin", string password = "")
+        : user(name, age, city, cnic, role, password), electionCount(0) {
+    }
+
+    void adminMenu()
+    {
+        int choice;
+        do
+        {
+            //system("cls");
+            cout << "=========================================" << endl;
+            cout << "              ADMIN MENU                 " << endl;
+            cout << "=========================================" << endl;
+            cout << "1. Create Election" << endl;
+            cout << "2. Add Candidate" << endl;;
+            cout << "3. Update Candidate Info" << endl;;
+            cout << "4. Add New Voter" << endl;;
+            cout << "5. Update Voter Info" << endl;;
+            cout << "6. Remove Candidate" << endl;;
+            cout << "7. Remove Voter " << endl;;
+            cout << "8. Show Results " << endl;;
+            cout << "9. Reset Results " << endl;;
+            cout << "10. Delete All Voters " << endl;;
+            cout << "0. Logout" << endl;;
+            cout << "===========================================" << endl;;
+            cout << "Enter your choice: " << endl;
+            cin >> choice;
+
+            switch (choice)
+            {
+            case 1:
+                 createElection();
+                
+               
+                break;
+            case 2:
+                addCandidate();
+                break;
+            case 3:
+                updateCandidate();
+                break;
+            case 4:
+                addNewVoter();
+                break;
+            case 5:
+                updateVoter();
+                break;
+            case 6:
+                removeCandidate();
+                break;
+            case 7:
+                removeVoter();
+                break;
+            case 8:
+                showResults();
+                break;
+            case 9:
+                resetResults();
+                break;
+            case 10:
+                deleteAllVotersData();
+                break;
+            case 0:
+                cout << Green << "Logging out...\n"<<Reset;
+                break;
+            default:
+                cout << Red << "Invalid choice, try again.\n" << Reset;
+            }
+            //system("pause");
+        } while (choice != 0);
+    }
+
+    void createElection()
+        {
+            cout << "Select Election Type:\n1. Provincial Election\n2. National Election\n";
+            int type;
+            cin >> type;
+
+            if (type == 1) {
+ 
+                string provinceName;
+                cout << "Enter the name of the province: ";
+                cin.ignore();
+                getline(cin, provinceName);
+                provincial* newProvince = new provincial(provinceName);
+                newProvince->createElection(); 
+                newProvince->showCandidates();
+             }
+            else if (type == 2) {
+
+                national_election* nationalElection = new national_election();
+                nationalElection->createElection();  
+                nationalElection->showAllCandidates();
+            }
+            else {
+                cout << Red << "Invalid election type selected.\n" << Reset;
+            }
+      }
+       
+
+    void addCandidate()
+    {
+        candidate c;
+        c.setDetails();
+        c.saveToFile();
+        cout << Green << "Candidate added successfully.\n" << Reset;
+    }
+
+    void updateCandidate()
+    {
+        candidate c;
+        c.update();
+    }
+
+    void removeCandidate()
+    {
+        candidate c;
+        c.removeCandidate();
+    }
+
+    void addNewVoter()
+    {
+        voter v;
+        v.setDetails();
+        v.saveToFile();
+        cout << Green << "New voter added successfully.\n" << Reset;
+    }
+
+    void updateVoter()
+    {
+        voter v;
+        v.update();
+    }
+
+    void removeVoter()
+    {
+        voter v;
+        v.deleteVoter();
+    }
+
+    void deleteAllVotersData()
+    {
+        voter v;
+        v.deleteAllVoters();
+    }
+
+    void resetResults()
+    {
+        Result::resetResults();
+        cout << Green << "All election results have been reset.\n" << Reset;
+    }
+
+    void showResults()
+    {
+        string area;
+        int choice;
+        cout << "\nChoose result type:\n1. National Election\n2. Provincial Election\n3. Area-wise Result\nEnter: ";
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice)
+        {
+        case 1:
+            Result::showLeadingParty();
+            Graph::drawPartyGraph();
+            break;
+        case 2:
+            cout << "Provincial results feature under development.\n";
+            break;
+        case 3:
+            cout << "Enter area name: ";
+            getline(cin, area);
+            Result::showAreaResults(area);
+            Graph::drawCandidateGraph(area);
+            break;
+        default:
+            cout << Red << "Invalid input!\n" << Reset;
+        }
+    }
+
+    void showrole() override
+    {
+        cout << "Role: Admin\n";
     }
 };
 
 
 
+void login_page()
+{
+    int n;
+    string entered_id, entered_pw;
+
+    while (true) {
+
+      /*  system("cls");*/
+        interface_logo();
+        cin.ignore();
+       cout << "Enter Your ID (VoterID / CandidateID / AdminID): ";
+        getline(cin, entered_id);
+        cout << endl;
+
+        cout << "\n\t\t\tSelect your Role:" << endl;
+        cout << "\t\t\t\t"<<Blue<<"1."<<Reset<<" Voter" << endl;
+        cout << "\t\t\t\t" << Blue << "2." << Reset << " Candidate" << endl;
+        cout << "\t\t\t\t" << Blue << "3." << Reset << " Admin" << endl;
+        cout << "\t\t\t\t" << Blue << "0." << Reset << " Exit" << endl;
+        cin >> n;
+        cin.ignore();
+
+        if (n == 0) {
+            cout << Yellow << "\t\t\t\tExiting the system. Goodbye!\n" << Reset;
+            break;
+        }
+        cout << "Enter Password: ";
+        getline(cin, entered_pw);
+
+
+        string filename;
+        if (n == 1) filename = "voters.txt";
+        else if (n == 2) filename = "candidates.txt";
+        else if (n == 3) filename = "admin.txt";
+        else {
+            cout << Red << "Invalid role choice.\n" << Reset;
+            continue;
+        }
+
+        ifstream file(filename);
+        if (!file.is_open()) {
+            cout << Red << "Error opening " << filename << Reset << endl;
+            continue;
+        }
+
+        string line, name, age, cnic, city, role, password, ID;
+        bool found = false;
+
+        while (getline(file, name)) {
+            getline(file, age);
+            getline(file, cnic);
+            getline(file, city);
+            getline(file, role);
+            getline(file, password);
+
+            if (role == "Voter") {
+                string voterID, area, hasvoted, sep;
+                getline(file, voterID);
+                getline(file, area);
+                getline(file, hasvoted);
+                getline(file, sep);
+
+
+                if (entered_id == voterID && entered_pw == password) {
+                    found = true;
+                    cout << Green << "Welcome " << name << "! (Voter)\n" << Reset;
+                    voter v(name, stoi(age), city, cnic, role, password, voterID, area);
+                    v.sethasvoted(hasvoted == "1");
+                    v.cast_vote(voterID);  // Cast vote immediately
+                    break;
+                }
+            }
+            else if (role == "Candidate") {
+                string candidateID, party, symbol, area, votes, eligible, sep;
+                getline(file, candidateID);
+                getline(file, party);
+                getline(file, symbol);
+                getline(file, area);
+                getline(file, votes);
+                getline(file, eligible);
+                getline(file, sep);
+
+                cout << "Entered Password: '" << entered_pw << "'" << endl;
+                cout << "Stored Password : '" << password << "'" << endl;
+                if (entered_id == candidateID && entered_pw == password)
+                {
+                    found = true;
+                    cout << Green << "Welcome " << name << "! (Candidate)\n" << Reset;
+                    // Optionally show candidate dashboard here
+
+                    system("pause");
+                    break;
+                }
+                
+            }
+            else if (role == "Admin")
+            {
+                string adminID, sep;
+                getline(file, adminID);
+                getline(file, sep);
+
+                if (entered_id == adminID && entered_pw == password)
+                {
+                    found = true;
+                    cout << Green << "Welcome Admin " << name << "!\n" << Reset;
+                    admin a(name, stoi(age), city, cnic, role, password);
+                    a.adminMenu();
+                    break;
+                }
+            }
+        }
+
+        file.close();
+
+        if (!found) {
+            cout << Red << "Incorrect ID or Password. Try again!\n\n" << Reset;
+        }
+    }
+}
 
 int main()
 {
     login_page();
+
+
     return 0;
 }
