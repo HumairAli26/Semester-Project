@@ -1531,7 +1531,76 @@ public:
         remove("Approval.txt");
         rename("temp.txt", "Approval.txt");
     }
-    
+
+    void approveCandidates() 
+    {
+        ifstream inFile("Approval.txt");
+        ofstream tempFile("temp.txt");
+        ofstream outFile("Candidate.txt", ios::app);
+
+        if (!inFile || !tempFile || !outFile)
+        {
+            cout << "Error opening one of the files.\n";
+            return;
+        }
+
+        string line;
+        string record[25];
+        int index = 0;
+
+        while (getline(inFile, line)) 
+        {
+            if (line == "----------") {
+                if (record[4] == "Candidate") {
+                    cout << "\nPending Candidate:\n";
+                    for (int i = 0; i < index; i++) 
+                    {
+                        cout << record[i] << endl;
+                    }
+                    cout << "\nApprove this Candidate? (y/n): ";
+                    char choice;
+                    cin >> choice;
+                    cin.ignore();
+
+                    if (choice == 'y' || choice == 'Y') 
+                    {
+                        for (int i = 0; i < index; i++) 
+                        {
+                            outFile << record[i] << endl;
+                            outFile << "----------" << endl;
+                        }
+                        cout << "Candidate approved.\n";
+                    } 
+                    else 
+                    {
+                        for (int i = 0; i < index; i++) 
+                        {   
+                            tempFile << record[i] << endl;
+                            tempFile << "----------" << endl;
+                        }
+                        cout << "Candidate skipped.\n";
+                    }
+                } 
+                else 
+                {
+                    for (int i = 0; i < index; i++) tempFile << record[i] << endl;
+                    tempFile << "----------" << endl;
+                }
+                index = 0;
+            } 
+            else 
+            {
+                record[index++] = line;
+            }
+        }
+
+        inFile.close();
+        outFile.close();
+        tempFile.close();
+
+        remove("Approval.txt");
+        rename("temp.txt", "Approval.txt");
+    }
 
     void showrole() override 
     {
