@@ -2137,7 +2137,7 @@ void login_signup_flow()
         }
         else if (roleChoice == 3) {
             role = "Admin";
-            filename = "admin.txt";
+            filename = "C:\\Users\\lenovo\\Downloads\\Project2\\admin.txt";
         }
         else {
             cout << Red << "Invalid role choice.\n" << Reset;
@@ -2152,6 +2152,10 @@ void login_signup_flow()
         clearInputBuffer();
 
         if (action == 1) {
+            if (roleChoice == 3) {
+                cout << "\n admin is alreday created , can only login " << endl;
+                continue;
+            }
             signup(filename, role);
         }
         else if (action == 2) {
@@ -2165,9 +2169,6 @@ void login_signup_flow()
         }
     }
 }
-
-
-
 
 
 
