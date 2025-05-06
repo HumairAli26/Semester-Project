@@ -535,6 +535,18 @@ public:
             default:
                 cout << Red << "Invalid choice! Try again.\n" << Reset;
             }
+            void viewCandidateInfo() {
+                cout << Bold << "\nCandidate Information:\n" << Reset;
+                cout << "Name: " << getname() << endl;
+                cout << "Age: " << getage() << endl;
+                cout << "CNIC: " << getcnic() << endl;
+                cout << "City: " << getcity() << endl;
+                cout << "Party: " << party << endl;
+                cout << "Symbol: " << symbol << endl;
+                cout << "Area: " << area << endl;
+                cout << "Candidate ID: " << CandidateID << endl;
+                cout << "Eligibility: " << (eligibility ? "Eligible" : "Not Eligible") << endl;
+            }//function defination 
 };
 
 class voter : virtual public user 
