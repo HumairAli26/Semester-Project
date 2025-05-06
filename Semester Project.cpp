@@ -1602,6 +1602,78 @@ public:
         rename("temp.txt", "Approval.txt");
     }
 
+    void approveAdmins() 
+    {
+        ifstream inFile("Approval.txt");
+        ofstream tempFile("temp.txt");
+        ofstream outFile("Admin.txt", ios::app);
+    
+        if (!inFile || !tempFile || !outFile) 
+        {
+            cout << "Error opening one of the files.\n";
+            return;
+        }
+    
+        string line;
+        string record[20];
+        int index = 0;
+    
+        while (getline(inFile, line)) 
+        {
+            if (line == "----------") 
+            {
+                if (record[4] == "Admin") 
+                {
+                    cout << "\nPending Admin:\n";
+                    for (int i = 0; i < index; i++) 
+                    {
+                        cout << record[i] << endl;
+                    }
+    
+                    cout << "\nApprove this Admin? (y/n): ";
+                    char choice;
+                    cin >> choice;
+                    cin.ignore();
+    
+                    if (choice == 'y' || choice == 'Y') 
+                    {
+                        for (int i = 0; i < index; i++) 
+                        {
+                            outFile << record[i] << endl;
+                            outFile << "----------" << endl;
+                        }
+                        cout << "Admin approved.\n";
+                    } 
+                    else 
+                    {
+                        for (int i = 0; i < index; i++) 
+                        {
+                            tempFile << record[i] << endl;
+                            tempFile << "----------" << endl;
+                        }
+                        cout << "Admin skipped.\n";
+                    }
+                } 
+                else 
+                {
+                    for (int i = 0; i < index; i++) tempFile << record[i] << endl;
+                    tempFile << "----------" << endl;
+                }
+                index = 0;
+            } 
+            else 
+            {
+                record[index++] = line;
+            }
+        }
+    
+        inFile.close();
+        outFile.close();
+        tempFile.close();
+        remove("Approval.txt");
+        rename("temp.txt", "Approval.txt");
+    }
+    
     void showrole() override 
     {
         cout << "Role: Admin\n";
