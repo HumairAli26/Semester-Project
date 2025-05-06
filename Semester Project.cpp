@@ -1277,15 +1277,18 @@ public:
             cout << "              ADMIN MENU                 "<<endl;
             cout << "========================================="<<endl;
             cout << "1. Create Election"<<endl;
-            cout << "2. Add Candidate"<<endl;;
-            cout << "3. Update Candidate Info"<<endl;;
-            cout << "4. Add New Voter"<<endl;;
-            cout << "5. Update Voter Info"<<endl;;
-            cout << "6. Remove Candidate"<<endl;;
-            cout << "7. Remove Voter "<<endl;;
-            cout << "8. Show Results "<<endl;;
-            cout << "9. Reset Results "<<endl;;
-            cout << "10. Delete All Voters "<<endl;;
+            cout << "2. Add Candidate"<<endl;
+            cout << "3. Update Candidate Info"<<endl;
+            cout << "4. Add New Voter"<<endl;
+            cout << "5. Update Voter Info"<<endl;
+            cout << "6. Remove Candidate"<<endl;
+            cout << "7. Remove Voter "<<endl;
+            cout << "8. Show Results "<<endl;
+            cout << "9. Reset Results "<<endl;
+            cout << "10. Delete All Voters "<<endl;
+            cout << "11. Approve Pending Voters"<<endl;
+            cout << "12. Approve Pending Candidate"<<endl;
+            cout << "13. Approve Pending Admin Requests "<<endl;
             cout << "0. Logout"<<endl;;
             cout << "==========================================="<<endl;;
             cout << "Enter your choice: "<<endl;
@@ -1322,6 +1325,15 @@ public:
                     break;
                 case 10: 
                     deleteAllVotersData(); 
+                    break;
+                case 11:
+                    approveVoters();
+                    break;
+                case 12:
+                    approveCandidates();
+                    break;
+                case 13:
+                    approveAdminRequests();
                     break;
                 case 0: 
                     cout << Green << "Logging out...\n"; 
@@ -1602,7 +1614,7 @@ public:
         rename("temp.txt", "Approval.txt");
     }
 
-    void approveAdmins() 
+    void approveAdminRequests() 
     {
         ifstream inFile("Approval.txt");
         ofstream tempFile("temp.txt");
