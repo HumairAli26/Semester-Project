@@ -97,7 +97,7 @@ bool isCNICDuplicate(const string& cnic)
     return false;
 }
 
-string isOnlyDigitsAndHyphen(const string& input) 
+string isVALIDCNIC(const string& input) 
 {
     if(input.length()==15)
     {
@@ -164,7 +164,7 @@ private:
     int age;
     string city;
     string cnic;
-    string role; // humain bataye ga kay user admin hai candidate hai ya voter hai
+    string role;
     string password;
 
 public:
@@ -202,7 +202,7 @@ public:
     }
     void setcnic(string cn)
     {
-        isOnlyDigitsAndHyphen(cn);
+        isVALIDCNIC(cn);
         cnic = cn;
     }
     void setrole(string r)
@@ -1949,107 +1949,227 @@ public:
     }
 };
 
-void login_page()
-{
+void login_page() {
     int n;
     string entered_id, entered_pw;
 
-    while (true) 
-    {
+    while (true) {
         interface_logo();
 
-        cout<<White<<"Select your Role:"<<endl; 
-        cout<<White<<"1. Voter"<<endl;
-        cout<<White<<"2. Candidate"<<endl; 
-        cout<<White<<"3. Admin"<<endl;
-        cout<<White<<"0. Exit"<<endl;
+        cout << White << "Select your Role:\n";
+        cout << "1. Voter\n2. Candidate\n3. Admin\n0. Exit\n";
         cin >> n;
-        if (n == 0) 
-        {
+
+        if (n == 0) {
             cout << Yellow << "Exiting the system. Goodbye!\n" << Reset;
             break;
         }
+
         cin.ignore();
         cout << "Enter Your ID (VoterID / CandidateID / AdminID): ";
         getline(cin, entered_id);
-
-        cin.ignore();
-        cout << "Enter Password: ";
-        getline(cin, entered_pw);
 
         string filename;
         if (n == 1) filename = "voter.txt";
         else if (n == 2) filename = "candidates.txt";
         else if (n == 3) filename = "admin.txt";
-        else 
-        {
+        else {
             cout << Red << "Invalid role choice.\n" << Reset;
             continue;
         }
 
         ifstream file(filename);
-        if (!file.is_open()) 
-        {
+        if (!file.is_open()) {
             cout << Red << "Error opening " << filename << Reset << endl;
             continue;
         }
 
-        string line, name, age, cnic, city, role, password, ID;
-        bool found = false;
+        string line, name, age, cnic, city, role, password;
+        bool found = false, correctPassword = false;
 
-        while (getline(file, name)) 
-        {
-            getline(file, age);
-            getline(file, cnic);
-            getline(file, city);
-            getline(file, role);
-            getline(file, password);
+        while (getline(file, name)) {
+            string userBlock = name + "\n";
+            getline(file, age);     userBlock += age + "\n";
+            getline(file, cnic);    userBlock += cnic + "\n";
+            getline(file, city);    userBlock += city + "\n";
+            getline(file, role);    userBlock += role + "\n";
+            getline(file, password);userBlock += password + "\n";
 
-            if (role == "Voter") 
-            {
-                string voterID, area, hasvoted, sep;
-                getline(file, voterID);
-                getline(file, area);
-                getline(file, hasvoted);
-                getline(file, sep);
+            string userID;
 
-                if (entered_id == voterID && entered_pw == password) 
-                {
+            if (role == "Voter") {
+                string area, hasvoted, sep;
+                getline(file, userID); userBlock += userID + "\n";
+                getline(file, area);   userBlock += area + "\n";
+                getline(file, hasvoted); userBlock += hasvoted + "\n";
+                getline(file, sep);      userBlock += sep + "\n";
+
+                if (entered_id == userID) {
+                    for (int attempts = 1; attempts <= 3; attempts++) {
+                        cout << "Enter Password: ";
+                        getline(cin, entered_pw);
+                        if (entered_pw == password) {
+                            correctPassword = true;
+                            break;
+                        } else {
+                            cout << Red << "Wrong password! Attempt " << attempts << "/3\n" << Reset;
+                        }
+                    }
+
+                    if (!correctPassword) {
+                        cout << Red << "Too many wrong attempts. User blocked.\n\n" << Reset;
+
+                        ofstream blockFile("block.txt", ios::app);
+                        blockFile << userBlock;
+                        blockFile << "----------------\n";
+                        blockFile.close();
+
+                        ifstream inFile(filename);
+                        ofstream tempFile("temp.txt");
+                        string tempLine, currentBlock = "";
+                        bool skip = false;
+
+                        while (getline(inFile, tempLine)) {
+                            currentBlock += tempLine + "\n";
+                            if (tempLine == userID) {
+                                skip = true;
+                            }
+                            if (tempLine == "----------------") {
+                                if (!skip) {
+                                    tempFile << currentBlock;
+                                }
+                                currentBlock = "";
+                                skip = false;
+                            }
+                        }
+
+                        inFile.close();
+                        tempFile.close();
+                        remove(filename.c_str());
+                        rename("temp.txt", filename.c_str());
+                        break;
+                    }
+
                     found = true;
                     cout << Green << "Welcome " << name << "! (Voter)\n" << Reset;
-                    voter v(name, stoi(age), city, cnic, role, password, voterID, area);
+                    voter v(name, stoi(age), city, cnic, role, password, userID, area);
                     v.sethasvoted(hasvoted == "1");
-                    v.cast_vote(voterID);  // Cast vote immediately
+                    v.cast_vote(userID);
                     break;
                 }
             }
-            else if (role == "Candidate") 
-            {
-                string candidateID, party, symbol, area, votes, eligible, sep;
-                getline(file, candidateID);
-                getline(file, party);
-                getline(file, symbol);
-                getline(file, area);
-                getline(file, votes);
-                getline(file, eligible);
-                getline(file, sep);
+            else if (role == "Candidate") {
+                string party, symbol, area, votes, eligible, sep;
+                getline(file, userID); userBlock += userID + "\n";
+                getline(file, party);   userBlock += party + "\n";
+                getline(file, symbol);  userBlock += symbol + "\n";
+                getline(file, area);    userBlock += area + "\n";
+                getline(file, votes);   userBlock += votes + "\n";
+                getline(file, eligible);userBlock += eligible + "\n";
+                getline(file, sep);     userBlock += sep + "\n";
 
-                if (entered_id == candidateID && entered_pw == password) 
-                {
+                if (entered_id == userID) {
+                    for (int attempts = 1; attempts <= 3; attempts++) {
+                        cout << "Enter Password: ";
+                        getline(cin, entered_pw);
+                        if (entered_pw == password) {
+                            correctPassword = true;
+                            break;
+                        } else {
+                            cout << Red << "Wrong password! Attempt " << attempts << "/3\n" << Reset;
+                        }
+                    }
+
+                    if (!correctPassword) {
+                        cout << Red << "Too many wrong attempts. User blocked.\n\n" << Reset;
+
+                        ofstream blockFile("block.txt", ios::app);
+                        blockFile << userBlock;
+                        blockFile << "----------------\n";
+                        blockFile.close();
+
+                        ifstream inFile(filename);
+                        ofstream tempFile("temp.txt");
+                        string tempLine, currentBlock = "";
+                        bool skip = false;
+
+                        while (getline(inFile, tempLine)) {
+                            currentBlock += tempLine + "\n";
+                            if (tempLine == userID) {
+                                skip = true;
+                            }
+                            if (tempLine == "----------------") {
+                                if (!skip) {
+                                    tempFile << currentBlock;
+                                }
+                                currentBlock = "";
+                                skip = false;
+                            }
+                        }
+
+                        inFile.close();
+                        tempFile.close();
+                        remove(filename.c_str());
+                        rename("temp.txt", filename.c_str());
+                        break;
+                    }
+
                     found = true;
                     cout << Green << "Welcome " << name << "! (Candidate)\n" << Reset;
-                    // Optionally show candidate dashboard here
                     break;
                 }
             }
-            else if (role == "Admin") 
-            {
-                string adminID, sep;
-                getline(file, adminID);
-                getline(file, sep);
+            else if (role == "Admin") {
+                string sep;
+                getline(file, userID); userBlock += userID + "\n";
+                getline(file, sep);    userBlock += sep + "\n";
 
-                if (entered_id == adminID && entered_pw == password) 
-                {
+                if (entered_id == userID) {
+                    for (int attempts = 1; attempts <= 3; attempts++) {
+                        cout << "Enter Password: ";
+                        getline(cin, entered_pw);
+                        if (entered_pw == password) {
+                            correctPassword = true;
+                            break;
+                        } else {
+                            cout << Red << "Wrong password! Attempt " << attempts << "/3\n" << Reset;
+                        }
+                    }
+
+                    if (!correctPassword) {
+                        cout << Red << "Too many wrong attempts. Admin blocked.\n\n" << Reset;
+
+                        ofstream blockFile("block.txt", ios::app);
+                        blockFile << userBlock;
+                        blockFile << "----------------\n";
+                        blockFile.close();
+
+                        ifstream inFile(filename);
+                        ofstream tempFile("temp.txt");
+                        string tempLine, currentBlock = "";
+                        bool skip = false;
+
+                        while (getline(inFile, tempLine)) {
+                            currentBlock += tempLine + "\n";
+                            if (tempLine == userID) {
+                                skip = true;
+                            }
+                            if (tempLine == "----------------") {
+                                if (!skip) {
+                                    tempFile << currentBlock;
+                                }
+                                currentBlock = "";
+                                skip = false;
+                            }
+                        }
+
+                        inFile.close();
+                        tempFile.close();
+                        remove(filename.c_str());
+                        rename("temp.txt", filename.c_str());
+                        break;
+                    }
+
                     found = true;
                     cout << Green << "Welcome Admin " << name << "!\n" << Reset;
                     admin a(name, stoi(age), city, cnic, role, password);
@@ -2060,13 +2180,12 @@ void login_page()
         }
 
         file.close();
-
-        if (!found) 
-        {
-            cout << Red << "Incorrect ID or Password. Try again!\n\n" << Reset;
+        if (!found && !correctPassword) {
+            cout << Red << "Incorrect ID or user not found.\n\n" << Reset;
         }
     }
 }
+
 
 void signup() 
 {
