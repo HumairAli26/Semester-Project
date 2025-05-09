@@ -2,9 +2,12 @@
 #include <fstream>
 #include <string>
 #include <limits>
+#include <ctime>
+#include <sstream>
 
 using namespace std;
 
+const string White = "\033[37m";
 const string Red = "\033[31m";
 const string Green = "\033[32m";
 const string Blue = "\033[34m";
@@ -14,26 +17,109 @@ const string Magenta = "\033[35m";
 const string Bold = "\033[1m";
 const string Reset = "\033[0m";
 
-string isOnlyDigitsAndHyphen(const string& input) 
+tm parseCTimeString(const string& timeStr) 
 {
-    while (true) 
+    tm result = {};
+    istringstream ss(timeStr);
+    string weekday, month;
+    int day, hour, min, sec, year;
+    char colon;
+    ss >> weekday >> month >> day >> hour >> colon >> min >> colon >> sec >> year;
+
+    string months[12] = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
+    for (int i = 0; i < 12; i++) 
     {
-        bool valid = true;
-        for (char ch : input) 
+        if (months[i] == month) 
         {
-            if (!isdigit(ch) && ch != '-') 
-            {
-                valid = false;
-                break;
+            result.tm_mon = i;
+            break;
+        }
+    }
+    result.tm_year = year - 1900;
+    result.tm_mday = day;
+    result.tm_hour = hour;
+    result.tm_min = min;
+    result.tm_sec = sec;
+
+    return result;
+}
+
+bool isElectionActive(const string& fileName) 
+{
+    ifstream file(fileName);
+    if (!file.is_open()) 
+    {
+        cout << "Error opening " << fileName << endl;
+        return false;
+    }
+    string line;
+    string lastEndTime;
+
+    while (getline(file, line)) 
+    {
+        if (line.find("End Time:") != string::npos)  
+        {
+            lastEndTime = line.substr(10);
+        }
+    }
+    file.close();
+    if (lastEndTime.empty()) 
+    {
+        cout << "No end time found in file.\n";
+        return false;
+    }
+    tm end_tm = parseCTimeString(lastEndTime);
+    time_t endTime = mktime(&end_tm);
+    time_t now = time(0);
+
+    return now < endTime;
+}
+
+bool isCNICDuplicate(const string& cnic) 
+{
+    string line;
+    ifstream files[] = {
+        ifstream("voter.txt"),
+        ifstream("candidate.txt"),
+        ifstream("admin.txt"),
+        ifstream("Approval.txt")
+    };
+
+    for (auto& file : files) {
+        while (getline(file, line)) {
+            if (line == cnic) {
+                file.close();
+                return true;
             }
         }
-        if (valid && !input.empty()) 
+        file.close();
+    }
+    return false;
+}
+
+string isOnlyDigitsAndHyphen(const string& input) 
+{
+    if(input.length()==15)
+    {
+        while (true) 
         {
-            return input;
-        } 
-        else 
-        {
-            cout << Red << "Invalid input! Only numbers and '-' are allowed.\n" << Reset;
+            bool valid = true;
+            for (char ch : input) 
+            {
+                if (!isdigit(ch) && ch != '-') 
+                {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid && !input.empty()) 
+            {
+                return input;
+            } 
+            else 
+            {
+                cout << Red << "Invalid input! Only numbers and '-' are allowed.\n" << Reset;
+            }
         }
     }
 }
@@ -66,9 +152,9 @@ string isonlyAlphabet(const string& input)
 
 void interface_logo()
 {
-    cout << "=====================================================================" << endl;
-    cout << "#                   E - V O T I N G   S Y S T E M                   #" << endl;
-    cout << "=====================================================================" << endl;
+    cout <<White<< "=====================================================================" << endl;
+    cout <<White<< "#                   E - V O T I N G   S Y S T E M                   #" << endl;
+    cout <<White<< "=====================================================================" << endl;
 }
 
 class user
@@ -1333,7 +1419,7 @@ public:
                     approveCandidates();
                     break;
                 case 13:
-                    approveAdminRequests();
+                    approveAdmins();
                     break;
                 case 0: 
                     cout << Green << "Logging out...\n"; 
@@ -1345,51 +1431,81 @@ public:
         } while (choice!=0);
     }
 
-    void createElection()
-     {
-         cout << Bold << "\nNew election created.\n" << Reset;
-         
-         int electionType;
-         string provinceName;
-         ofstream file("election.txt", ios::app); 
- 
-         cout << "\nWhich type of election do you want to start?\n";
-         cout << "1. National Election\n";
-         cout << "2. Provincial Election\n";
-         cout << "Enter your choice: ";
-         cin >> electionType;
- 
-         switch (electionType)
-         {
-             //National election created:
-         case 1:
-             cout << Green << "National Election started successfully.\n" << Reset;
-             file << "ElectionType: National\n";
-             file << "----------------------";
-             electionCount++;
-             break;
+    void createElection() 
+    {
+        cout <<Bold<< "=== Create New Election ==="<<Reset<<endl;
+        int electionType;
+        string provinceName;
+        ofstream file;
 
-            // Provincial election created:
-         case 2:
-             cout << "Enter the name of the province (e.g., Punjab, Sindh, KP, Balochistan): ";
-             cin.ignore(); 
-             getline(cin, provinceName);
-             cout << Green << provinceName << " Provincial Election started successfully.\n" << Reset;
-             file << "ElectionType: Provincial\n";
-             file << "----------------------\n";
-             file << "Province: " << provinceName << "\n";
-             file << "----------------------\n";
-             electionCount++;
-             break;
- 
-         default:
-             cout << Red << "Invalid election type selected.\n" << Reset;
-             break;
-         }
- 
-         file.close();
-     }
- 
+        cout << "Which type of election do you want to start?"<<endl;
+        cout << Cyan << "1. National Election"<<Reset<<endl;
+        cout << Cyan << "2. Provincial Election"<<Reset<<endl;
+        cout << "Enter your choice: ";
+        cin >> electionType;
+
+        int year, month, day, hour, minute;
+        cout << "Enter election end date and time (YYYY MM DD HH MM): ";
+        cin >> year >> month >> day >> hour >> minute;
+
+        tm end_tm = {};
+        end_tm.tm_year = year - 1900;
+        end_tm.tm_mon = month - 1;
+        end_tm.tm_mday = day;
+        end_tm.tm_hour = hour;
+        end_tm.tm_min = minute;
+        end_tm.tm_sec = 0;
+
+        time_t endTime = mktime(&end_tm);
+        if (endTime == -1) 
+        {
+            cout <<Red<< "Invalid time entered."<<Reset<<endl;
+            return;
+        }
+
+        char* endTimeStr = ctime(&endTime);
+
+        switch (electionType) 
+        {
+            case 1:
+                file.open("national_election.txt", ios::app);
+                if (!file.is_open()) 
+                {
+                    cout <<Red<<"Error: Could not open national_election.txt."<<Reset<<endl;
+                    return;
+                }
+                cout << Green << "National Election started successfully."<<endl;
+                file << "----------------------"<<endl;
+                file << "ElectionType: National"<<endl;
+                file << "Election Number: " << ++electionCount << endl;
+                file << "End Time: " << endTimeStr;
+                file << "----------------------"<<endl;
+                break;
+            case 2:
+                cin.ignore();
+                cout << "Enter the name of the province (e.g., Punjab, Sindh, KP, Balochistan): ";
+                getline(cin, provinceName);
+                file.open("provincial_election.txt", ios::app);
+                if (!file.is_open()) 
+                {
+                    cout <<Red<< "Error: Could not open provincial_election.txt."<<endl;
+                    return;
+                }
+                cout << Green << provinceName << " Provincial Election started successfully."<<endl;
+                file << "----------------------"<<endl;
+                file << "ElectionType: Provincial"<<endl;
+                file << "Province: " << provinceName << endl;
+                file << "Election Number: " << ++electionCount << endl;
+                file << "End Time: " << endTimeStr;
+                file << "----------------------"<<endl;
+                break;
+
+            default:
+                cout <<Red<< "Invalid election type selected."<<endl;
+                return;
+        }
+        file.close();
+    }
 
     void addCandidate() 
     {
@@ -1471,220 +1587,72 @@ public:
         }
     }
 
-    void approveVoters() 
-    {
+    void approveRole(const string& targetRole, const string& outputFile) {
         ifstream inFile("Approval.txt");
         ofstream tempFile("temp.txt");
-        ofstream outFile("Voter.txt", ios::app);
+        ofstream outFile(outputFile, ios::app);
     
-        if (!inFile || !tempFile || !outFile) 
-        {
-            cout << "Error opening one of the files.\n";
+        if (!inFile || !tempFile || !outFile) {
+            cout << "File open error.\n";
             return;
         }
     
         string line;
-        string record[15];
+        string record[1000];
         int index = 0;
     
-        while (getline(inFile, line)) 
-        {
-            if (line == "----------") 
-            {
-                if (index >= 5 && record[4] == "Voter") 
-                {
-                    cout << "\nPending Voter:\n";
-                    for (int i = 0; i < index; i++) 
-                    {
-                        cout << record[i] << endl;
-                    }
-                    cout << "\nApprove this Voter? (y/n): ";
+        while (getline(inFile, line)) {
+            if (line == "----------") {
+                if (index >= 5 && record[4] == targetRole) {
+                    cout << "\nPending " << targetRole << ":\n";
+                    for (int i = 0; i < index; i++) cout << record[i] << endl;
+    
+                    cout << "\nApprove this " << targetRole << "? (y/n): ";
                     char choice;
                     cin >> choice;
                     cin.ignore();
     
-                    if (choice == 'y' || choice == 'Y') 
-                    {
+                    if (choice == 'y' || choice == 'Y') {
                         for (int i = 0; i < index; i++) outFile << record[i] << endl;
                         outFile << "----------" << endl;
-                        cout << "Voter approved.\n";
-                    } 
-                    else 
-                    {
+                        cout << targetRole << " approved.\n";
+                    } else {
                         for (int i = 0; i < index; i++) tempFile << record[i] << endl;
                         tempFile << "----------" << endl;
-                        cout << "Voter skipped.\n";
+                        cout << targetRole << " skipped.\n";
                     }
-                } 
-                else 
-                {
+                } else {
                     for (int i = 0; i < index; i++) tempFile << record[i] << endl;
                     tempFile << "----------" << endl;
                 }
                 index = 0;
-            } 
-            else 
-            {
-                if (index < 15) 
-                {
-                    record[index++] = line;
-                } 
-                else 
-                {
-                    cout << "Error: Record exceeds 1000 lines. Skipping.\n";
-                    index = 0;
-                    while (getline(inFile, line) && line != "----------");
-                }
-            }
-        }
-        inFile.close();
-        outFile.close();
-        tempFile.close();
-        remove("Approval.txt");
-        rename("temp.txt", "Approval.txt");
-    }
-
-    void approveCandidates() 
-    {
-        ifstream inFile("Approval.txt");
-        ofstream tempFile("temp.txt");
-        ofstream outFile("Candidate.txt", ios::app);
-
-        if (!inFile || !tempFile || !outFile)
-        {
-            cout << "Error opening one of the files.\n";
-            return;
-        }
-
-        string line;
-        string record[25];
-        int index = 0;
-
-        while (getline(inFile, line)) 
-        {
-            if (line == "----------") {
-                if (record[4] == "Candidate") {
-                    cout << "\nPending Candidate:\n";
-                    for (int i = 0; i < index; i++) 
-                    {
-                        cout << record[i] << endl;
-                    }
-                    cout << "\nApprove this Candidate? (y/n): ";
-                    char choice;
-                    cin >> choice;
-                    cin.ignore();
-
-                    if (choice == 'y' || choice == 'Y') 
-                    {
-                        for (int i = 0; i < index; i++) 
-                        {
-                            outFile << record[i] << endl;
-                            outFile << "----------" << endl;
-                        }
-                        cout << "Candidate approved.\n";
-                    } 
-                    else 
-                    {
-                        for (int i = 0; i < index; i++) 
-                        {   
-                            tempFile << record[i] << endl;
-                            tempFile << "----------" << endl;
-                        }
-                        cout << "Candidate skipped.\n";
-                    }
-                } 
-                else 
-                {
-                    for (int i = 0; i < index; i++) tempFile << record[i] << endl;
-                    tempFile << "----------" << endl;
-                }
-                index = 0;
-            } 
-            else 
-            {
-                record[index++] = line;
-            }
-        }
-
-        inFile.close();
-        outFile.close();
-        tempFile.close();
-
-        remove("Approval.txt");
-        rename("temp.txt", "Approval.txt");
-    }
-
-    void approveAdminRequests() 
-    {
-        ifstream inFile("Approval.txt");
-        ofstream tempFile("temp.txt");
-        ofstream outFile("Admin.txt", ios::app);
-    
-        if (!inFile || !tempFile || !outFile) 
-        {
-            cout << "Error opening one of the files.\n";
-            return;
-        }
-    
-        string line;
-        string record[20];
-        int index = 0;
-    
-        while (getline(inFile, line)) 
-        {
-            if (line == "----------") 
-            {
-                if (record[4] == "Admin") 
-                {
-                    cout << "\nPending Admin:\n";
-                    for (int i = 0; i < index; i++) 
-                    {
-                        cout << record[i] << endl;
-                    }
-    
-                    cout << "\nApprove this Admin? (y/n): ";
-                    char choice;
-                    cin >> choice;
-                    cin.ignore();
-    
-                    if (choice == 'y' || choice == 'Y') 
-                    {
-                        for (int i = 0; i < index; i++) 
-                        {
-                            outFile << record[i] << endl;
-                            outFile << "----------" << endl;
-                        }
-                        cout << "Admin approved.\n";
-                    } 
-                    else 
-                    {
-                        for (int i = 0; i < index; i++) 
-                        {
-                            tempFile << record[i] << endl;
-                            tempFile << "----------" << endl;
-                        }
-                        cout << "Admin skipped.\n";
-                    }
-                } 
-                else 
-                {
-                    for (int i = 0; i < index; i++) tempFile << record[i] << endl;
-                    tempFile << "----------" << endl;
-                }
-                index = 0;
-            } 
-            else 
-            {
-                record[index++] = line;
+            } else {
+                if (index < 1000) record[index++] = line;
             }
         }
     
         inFile.close();
-        outFile.close();
         tempFile.close();
+        outFile.close();
+    
         remove("Approval.txt");
         rename("temp.txt", "Approval.txt");
     }
+    
+    void approveVoters()    
+    { 
+        approveRole("Voter","voter.txt"); 
+    }
+
+    void approveCandidates()
+    { 
+        approveRole("Candidate","candidate.txt"); 
+    }
+
+    void approveAdmins()    
+    { 
+        approveRole("Admin","admin.txt"); 
+    }    
     
     void showrole() override 
     {
@@ -1986,39 +1954,42 @@ void login_page()
     int n;
     string entered_id, entered_pw;
 
-    while (true) {
+    while (true) 
+    {
         interface_logo();
 
-        cout << "Enter Your ID (VoterID / CandidateID / AdminID): ";
-        getline(cin, entered_id);
-
-        cout<<"Select your Role:"<<endl; 
-        cout<<"1. Voter"<<endl;
-        cout<<"2. Candidate"<<endl; 
-        cout<<"3. Admin"<<endl;
-        cout<<"0. Exit"<<endl;
+        cout<<White<<"Select your Role:"<<endl; 
+        cout<<White<<"1. Voter"<<endl;
+        cout<<White<<"2. Candidate"<<endl; 
+        cout<<White<<"3. Admin"<<endl;
+        cout<<White<<"0. Exit"<<endl;
         cin >> n;
-        cin.ignore();
-
-        cout << "Enter Password: ";
-        getline(cin, entered_pw);
-
-        if (n == 0) {
+        if (n == 0) 
+        {
             cout << Yellow << "Exiting the system. Goodbye!\n" << Reset;
             break;
         }
+        cin.ignore();
+        cout << "Enter Your ID (VoterID / CandidateID / AdminID): ";
+        getline(cin, entered_id);
+
+        cin.ignore();
+        cout << "Enter Password: ";
+        getline(cin, entered_pw);
 
         string filename;
-        if (n == 1) filename = "voters.txt";
+        if (n == 1) filename = "voter.txt";
         else if (n == 2) filename = "candidates.txt";
         else if (n == 3) filename = "admin.txt";
-        else {
+        else 
+        {
             cout << Red << "Invalid role choice.\n" << Reset;
             continue;
         }
 
         ifstream file(filename);
-        if (!file.is_open()) {
+        if (!file.is_open()) 
+        {
             cout << Red << "Error opening " << filename << Reset << endl;
             continue;
         }
@@ -2026,7 +1997,8 @@ void login_page()
         string line, name, age, cnic, city, role, password, ID;
         bool found = false;
 
-        while (getline(file, name)) {
+        while (getline(file, name)) 
+        {
             getline(file, age);
             getline(file, cnic);
             getline(file, city);
@@ -2041,7 +2013,8 @@ void login_page()
                 getline(file, hasvoted);
                 getline(file, sep);
 
-                if (entered_id == voterID && entered_pw == password) {
+                if (entered_id == voterID && entered_pw == password) 
+                {
                     found = true;
                     cout << Green << "Welcome " << name << "! (Voter)\n" << Reset;
                     voter v(name, stoi(age), city, cnic, role, password, voterID, area);
@@ -2050,7 +2023,8 @@ void login_page()
                     break;
                 }
             }
-            else if (role == "Candidate") {
+            else if (role == "Candidate") 
+            {
                 string candidateID, party, symbol, area, votes, eligible, sep;
                 getline(file, candidateID);
                 getline(file, party);
@@ -2060,19 +2034,22 @@ void login_page()
                 getline(file, eligible);
                 getline(file, sep);
 
-                if (entered_id == candidateID && entered_pw == password) {
+                if (entered_id == candidateID && entered_pw == password) 
+                {
                     found = true;
                     cout << Green << "Welcome " << name << "! (Candidate)\n" << Reset;
                     // Optionally show candidate dashboard here
                     break;
                 }
             }
-            else if (role == "Admin") {
+            else if (role == "Admin") 
+            {
                 string adminID, sep;
                 getline(file, adminID);
                 getline(file, sep);
 
-                if (entered_id == adminID && entered_pw == password) {
+                if (entered_id == adminID && entered_pw == password) 
+                {
                     found = true;
                     cout << Green << "Welcome Admin " << name << "!\n" << Reset;
                     admin a(name, stoi(age), city, cnic, role, password);
@@ -2084,7 +2061,8 @@ void login_page()
 
         file.close();
 
-        if (!found) {
+        if (!found) 
+        {
             cout << Red << "Incorrect ID or Password. Try again!\n\n" << Reset;
         }
     }
@@ -2095,28 +2073,17 @@ void signup()
     string name, city, cnic, password, id, area, party, symbol, role;
     int age;
 
-    cout << "Enter Role (Voter / Candidate / Admin): ";
+    cin.ignore();
+    cout << "Enter Role (Voter/Candidate/Admin): ";
     getline(cin, role);
-
-    for (auto& ch : role) ch = tolower(ch);
-    if (role == "voter") role = "Voter";
-    else if (role == "candidate") role = "Candidate";
-    else if (role == "admin") role = "Admin";
-    else 
-    {
-        cout << "Invalid role. Please restart signup.\n";
-        return;
-    }
 
     cout << "Enter Name: ";
     getline(cin, name);
 
     cout << "Enter Age: ";
-    while (!(cin >> age) || age < 18 || age > 120) 
-    {
+    while (!(cin >> age) || age < 18 || age > 120) {
         cout << "Invalid age. Enter a number between 18 and 120: ";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.clear(); cin.ignore(10000, '\n');
     }
     cin.ignore();
 
@@ -2125,19 +2092,21 @@ void signup()
 
     cout << "Enter CNIC: ";
     getline(cin, cnic);
+    if (isCNICDuplicate(cnic)) {
+        cout << "Error: CNIC already exists!\n";
+        return;
+    }
 
     cout << "Enter Password: ";
     getline(cin, password);
 
-    if (role == "Voter") 
-    {
+    if (role == "Voter") {
         cout << "Enter Voter ID: ";
         getline(cin, id);
         cout << "Enter Area: ";
         getline(cin, area);
-    } 
-    else if (role == "Candidate") 
-    {
+    }
+    else if (role == "Candidate") {
         cout << "Enter Candidate ID: ";
         getline(cin, id);
         cout << "Enter Party: ";
@@ -2146,49 +2115,61 @@ void signup()
         getline(cin, symbol);
         cout << "Enter Area: ";
         getline(cin, area);
-    } 
-    else if (role == "Admin") 
-    {
+    }
+    else if (role == "Admin") {
         cout << "Enter Admin ID: ";
         getline(cin, id);
     }
-
-    ofstream file("PendingApproval.txt", ios::app);
-    if (file.is_open()) 
-    {
-        file << name << endl;
-        file << age << endl;
-        file << cnic << endl;
-        file << city << endl;
-        file << role << endl;
-        file << password << endl;
-        file << id << endl;
-
-        if (role == "Candidate") 
-        {
-            file << party << endl;
-            file << symbol << endl;
-            file << area << endl;
-            file << "0" << endl;
-            file << "1" << endl;
-        } 
-        else if (role == "Voter") 
-        {
-            file << area << endl;
-            file << "0" << endl;
-        }
-        file << "----------" << endl;
-        file.close();
-        cout << Green << role << " signup request submitted for approval.\n" << Reset;
-    } 
-    else 
-    {
-        cout << Red << "Error opening approval file.\n" << Reset;
+    else {
+        cout << "Invalid role.\n";
+        return;
     }
+
+    ofstream file("Approval.txt", ios::app);
+    if (!file) {
+        cout << "Error opening approval file.\n";
+        return;
+    }
+
+    file << name << endl;
+    file << age << endl;
+    file << cnic << endl;
+    file << city << endl;
+    file << role << endl;
+    file << password << endl;
+    file << id << endl;
+    if (role == "Voter") {
+        file << area << endl;
+        file << "0\n";
+    }
+    else if (role == "Candidate") {
+        file << party << endl;
+        file << symbol << endl;
+        file << area << endl;
+        file << "0\n1\n";
+    }
+    file << "----------\n";
+    file.close();
+    cout << role << " account submitted for approval.\n";
 }
 
 int main()
 {
-    login_page();
+    int choice;
+    cout <<"Enter Your Choice"<<endl;
+    cout <<"1. Login"<<endl;
+    cout <<"2. Sign Up"<<endl;
+    cin>>choice;
+    switch (choice)
+    {
+    case 1:
+        login_page();
+        break;
+    case 2:
+        signup();
+        break;
+    default:
+        break;
+    }
     return 0;
 }
