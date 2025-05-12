@@ -907,7 +907,7 @@ public:
         int electionType;
         cout << Bold << "\nWhich election do you want to vote in?\n" << Reset;
         cout << Cyan << "1. National Election\n" << Reset;
-        cout << Cyan << "2. Provincial Election\n" << Reset;
+        cout << Cyan << "2. Local Election\n" << Reset;
         cout << "Enter your choice: ";
         cin >> electionType;
         cin.ignore();
@@ -919,7 +919,7 @@ public:
         }
         else if (electionType == 2)
         {
-            strcpy(filename, "provincial_election.txt");
+            strcpy(filename, "local_election.txt");
         }
         else
         {
@@ -927,7 +927,7 @@ public:
             return;
         }
 
-        // Display Elections from file
+        // Load elections
         ifstream fin(filename);
         if (!fin)
         {
@@ -957,20 +957,17 @@ public:
         }
         fin.close();
 
-        // Filter provincial elections by voter's area
         if (electionType == 2)
         {
             string temp[MAX_ELECTIONS];
             int tempCount = 0;
             for (int i = 0; i < count; i++)
             {
-                if (elections[i].find("Province: " + area) != string::npos)
+                if (elections[i].find("Area: " + area) != string::npos)
                 {
                     temp[tempCount++] = elections[i];
                 }
             }
-
-            // Copy filtered ones back
             for (int i = 0; i < tempCount; i++)
             {
                 elections[i] = temp[i];
@@ -979,7 +976,7 @@ public:
 
             if (count == 0)
             {
-                cout << Red << "No provincial elections found for your province: " << area << "\n" << Reset;
+                cout << Red << "No Local elections found for your area: " << area << "\n" << Reset;
                 return;
             }
         }
@@ -990,7 +987,6 @@ public:
             return;
         }
 
-        // Show elections
         cout << Bold << "\nAvailable Elections:\n" << Reset;
         for (int i = 0; i < count; i++)
         {
@@ -1007,7 +1003,7 @@ public:
             return;
         }
 
-        // Show candidates in voter's area
+        // Load candidates
         ifstream cf("candidates.txt");
         if (!cf)
         {
@@ -1023,7 +1019,6 @@ public:
         {
             string name = line;
             string age, cnic, city, role, pass, id, party, symbol, areaLine, voteLine, eligible, sep;
-
             getline(cf, age);
             getline(cf, cnic);
             getline(cf, city);
@@ -1073,72 +1068,59 @@ public:
             return;
         }
 
-        // Update vote in candidates.txt
         string selectedID = candID[voteIndex - 1];
+
+        //Update candidate vote
         ifstream cfin("candidates.txt");
         ofstream cfout("temp.txt");
+        string sep;
+
         while (getline(cfin, line))
         {
-            cfout << line << endl;
-            string lines[10];
-            for (int i = 0; i < 10; i++)
-            {
-                getline(cfin, lines[i]);
-                cfout << lines[i] << endl;
-            }
-            string votesLine, idLine;
-            getline(cfin, votesLine);
-            getline(cfin, idLine);
+            string fields[12];
+            fields[0] = line;
+            for (int i = 1; i < 12; i++) getline(cfin, fields[i]);
+            getline(cfin, sep);
 
-            if (idLine == selectedID)
+            if (fields[6] == selectedID) // CandidateID match
             {
-                int newVotes = stoi(votesLine) + 1;
-                cfout << newVotes << endl;
+                int newVotes = stoi(fields[10]) + 1;
+                fields[10] = to_string(newVotes);
             }
-            else
-            {
-                cfout << votesLine << endl;
-            }
-            cfout << idLine << endl;
+
+            for (int i = 0; i < 12; i++) cfout << fields[i] << endl;
+            cfout << "----------" << endl;
         }
         cfin.close();
         cfout.close();
         remove("candidates.txt");
         rename("temp.txt", "candidates.txt");
 
-        // Update voter's hasVoted
+        //Update voter record
         ifstream vin("voter.txt");
         ofstream vout("temp_v.txt");
+
         while (getline(vin, line))
         {
-            vout << line << endl;
-            string voterLines[7];
-            for (int i = 0; i < 7; i++)
-            {
-                getline(vin, voterLines[i]);
-                vout << voterLines[i] << endl;
-            }
-
-            string hasVotedLine;
-            getline(vin, hasVotedLine);
-            string sep;
+            string vfields[9];
+            vfields[0] = line;
+            for (int i = 1; i < 9; i++) getline(vin, vfields[i]);
             getline(vin, sep);
 
-            if (voterLines[3] == voterID_loggedIn)
+            if (vfields[6] == voterID_loggedIn)  // VoterID match
             {
-                vout << "1" << endl;
+                vfields[8] = "1"; // Set hasvoted = 1
                 hasvoted = true;
             }
-            else
-            {
-                vout << hasVotedLine << endl;
-            }
-            vout << sep << endl;
+
+            for (int i = 0; i < 9; i++) vout << vfields[i] << endl;
+            vout << "----------" << endl;
         }
+
         vin.close();
         vout.close();
-        remove("voter.txt");
-        rename("temp_v.txt", "voter.txt");
+        remove("Voter.txt");
+        rename("temp_v.txt", "Voter.txt");
 
         cout << Green << "Your vote has been cast successfully.\n" << Reset;
     }
@@ -1351,7 +1333,7 @@ public:
         {
             cout << parties[i] << " | ";
             for (int j = 0; j < wins[i]; j++)
-                cout << "â–ˆ";
+                cout << "█";
             cout << " (" << wins[i] << ")" << endl;
         }
     }
@@ -1398,18 +1380,18 @@ public:
         }
         file.close();
 
-        if (count == 0)
+        /*if (count == 0)
         {
             cout << Red << "No candidates found for area: " << areaName << Reset << endl;
             return;
-        }
+        }*/
         cout << Bold << "\nCandidate-wise Vote Graph for Area: " << areaName << "\n"
              << Reset;
         for (int i = 0; i < count; i++)
         {
             cout << names[i] << " | ";
-            for (int j = 0; j < votes[i]; j += 10) // scale down
-                cout << "*";
+            for (int j = 0; j < votes[i]; j += 50) // scale down
+                cout << "█";
             cout << " (" << votes[i] << " votes)" << endl;
         }
     }
@@ -1830,12 +1812,12 @@ void  addUsers(){
     {
         cout << Bold << "\t\t\t\t=== Create New Election ===" << Reset << endl;
         int electionType;
-        string provinceName;
+        string AreaName;
         ofstream file;
 
         cout << "\t\t\t\tWhich type of election do you want to start?" << endl;
         cout << Cyan << "\t\t\t\t1. National Election" << Reset << endl;
-        cout << Cyan << "\t\t\t\t2. Provincial Election" << Reset << endl;
+        cout << Cyan << "\t\t\t\t2. Local Election" << Reset << endl;
         cout << "\t\t\tEnter your choice: ";
         cin >> electionType;
 
@@ -1878,18 +1860,18 @@ void  addUsers(){
             break;
         case 2:
             cin.ignore();
-            cout << "Enter the name of the province (e.g., Punjab, Sindh, KP, Balochistan): ";
-            getline(cin, provinceName);
-            file.open("provincial_election.txt", ios::app);
+            cout << "Enter the name of the Area ";
+            getline(cin, AreaName);
+            file.open("local_election.txt", ios::app);
             if (!file.is_open())
             {
                 cout << Red << "Error: Could not open provincial_election.txt." << Reset << endl;
                 return;
             }
-            cout << Green << provinceName << " Provincial Election started successfully." << Reset << endl;
+            cout << Green << AreaName << " Provincial Election started successfully." << Reset << endl;
             file << "----------------------" << endl;
             file << "ElectionType: Provincial" << endl;
-            file << "Province: " << provinceName << endl;
+            file << "Area " << AreaName << endl;
             file << "Election Number: " << ++electionCount << endl;
             file << "End Time: " << endTimeStr;
             file << "----------------------" << endl;
@@ -1961,7 +1943,7 @@ void  addUsers(){
     {
         string area;
         int choice;
-        cout << "\nChoose result type:\n1. National Election\n2. Provincial Election\n3. Area-wise Result\nEnter: ";
+        cout << "\nChoose result type:\n1. National Election\n2. Local/Area-wise Result\n3. Exit\nEnter: ";
         cin >> choice;
         cin.ignore();
 
@@ -1972,13 +1954,12 @@ void  addUsers(){
             Graph::drawPartyGraph();
             break;
         case 2:
-            cout << "Provincial results feature under development.\n";
-            break;
-        case 3:
             cout << "Enter area name: ";
             getline(cin, area);
             Result::showAreaResults(area);
             Graph::drawCandidateGraph(area);
+            break;
+        case 3:
             break;
         default:
             cout << Red << "Invalid input!\n"
@@ -2330,7 +2311,7 @@ void login_page()
 
     while (true)
     {
-        cout << "\n\t\t\tSelect your Role:" << endl;
+        cout << "\n\t\t\t       Select your Role:" << endl;
         cout << "\t\t\t\t" << Blue << "1." << Reset << " Voter" << endl;
         cout << "\t\t\t\t" << Blue << "2." << Reset << " Candidate" << endl;
         cout << "\t\t\t\t" << Blue << "3." << Reset << " Admin" << endl;
